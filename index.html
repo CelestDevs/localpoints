@@ -4,489 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LocalPoints - Clube de Vantagens da Sua Cidade</title>
-    <style>
-        /* Reset e configurações gerais */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        :root {
-            --azul-escuro: #1a237e;
-            --azul-medio: #283593;
-            --branco: #ffffff;
-            --laranja: #ff6d00;
-            --laranja-claro: #ffab40;
-            --cinza-claro: #f5f5f5;
-            --cinza-escuro: #424242;
-        }
-
-        body {
-            background-color: var(--branco);
-            color: var(--cinza-escuro);
-            line-height: 1.6;
-        }
-
-        .container {
-            width: 90%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 15px;
-        }
-
-        /* Header e Navegação */
-        header {
-            background-color: var(--azul-escuro);
-            color: var(--branco);
-            padding: 1rem 0;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .header-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .logo h1 {
-            font-size: 1.8rem;
-            font-weight: 700;
-        }
-
-        .logo span {
-            color: var(--laranja);
-        }
-
-        .nav-links {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-        }
-
-        .nav-links a {
-            color: var(--branco);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-
-        .nav-links a:hover {
-            color: var(--laranja-claro);
-        }
-
-        .mobile-menu {
-            display: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        /* Seção Hero */
-        .hero {
-            background: linear-gradient(135deg, var(--azul-escuro) 0%, var(--azul-medio) 100%);
-            color: var(--branco);
-            padding: 5rem 0;
-            text-align: center;
-        }
-
-        .hero-content {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .hero h2 {
-            font-size: 2.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .hero p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-            opacity: 0.9;
-        }
-
-        .cta-button {
-            display: inline-block;
-            background-color: var(--laranja);
-            color: var(--branco);
-            padding: 12px 30px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1.1rem;
-            transition: all 0.3s;
-            box-shadow: 0 4px 15px rgba(255, 109, 0, 0.3);
-        }
-
-        .cta-button:hover {
-            background-color: var(--laranja-claro);
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(255, 109, 0, 0.4);
-        }
-
-        /* Seção Como Funciona */
-        .como-funciona {
-            padding: 5rem 0;
-            background-color: var(--cinza-claro);
-        }
-
-        .section-title {
-            text-align: center;
-            margin-bottom: 3rem;
-        }
-
-        .section-title h2 {
-            font-size: 2.2rem;
-            color: var(--azul-escuro);
-            margin-bottom: 1rem;
-        }
-
-        .section-title p {
-            color: var(--cinza-escuro);
-            max-width: 700px;
-            margin: 0 auto;
-        }
-
-        .passos {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 2rem;
-        }
-
-        .passo {
-            flex: 1;
-            min-width: 250px;
-            background-color: var(--branco);
-            padding: 2rem;
-            border-radius: 10px;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s;
-        }
-
-        .passo:hover {
-            transform: translateY(-10px);
-        }
-
-        .passo-icon {
-            background-color: var(--azul-escuro);
-            color: var(--branco);
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1.5rem;
-            font-size: 1.8rem;
-        }
-
-        .passo h3 {
-            color: var(--azul-escuro);
-            margin-bottom: 1rem;
-        }
-
-        /* Seção Vantagens */
-        .vantagens {
-            padding: 5rem 0;
-        }
-
-        .vantagens-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-        }
-
-        .vantagem {
-            display: flex;
-            gap: 1.5rem;
-            align-items: flex-start;
-        }
-
-        .vantagem-icon {
-            background-color: var(--laranja);
-            color: var(--branco);
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            font-size: 1.2rem;
-        }
-
-        .vantagem-content h3 {
-            color: var(--azul-escuro);
-            margin-bottom: 0.5rem;
-        }
-
-        /* Seção Lojas Parceiras */
-        .lojas-parceiras {
-            padding: 5rem 0;
-            background-color: var(--cinza-claro);
-        }
-
-        .lojas-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .loja-card {
-            background-color: var(--branco);
-            border-radius: 10px;
-            padding: 1.5rem;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s;
-        }
-
-        .loja-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .loja-icon {
-            font-size: 2.5rem;
-            color: var(--azul-escuro);
-            margin-bottom: 1rem;
-        }
-
-        /* Seção App */
-        .app {
-            padding: 5rem 0;
-            background: linear-gradient(135deg, var(--azul-escuro) 0%, var(--azul-medio) 100%);
-            color: var(--branco);
-        }
-
-        .app-content {
-            display: flex;
-            align-items: center;
-            gap: 3rem;
-            flex-wrap: wrap;
-        }
-
-        .app-text {
-            flex: 1;
-            min-width: 300px;
-        }
-
-        .app-text h2 {
-            font-size: 2.2rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .app-text p {
-            margin-bottom: 2rem;
-            opacity: 0.9;
-        }
-
-        .app-image {
-            flex: 1;
-            min-width: 300px;
-            text-align: center;
-        }
-
-        .app-image img {
-            max-width: 100%;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .download-buttons {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .download-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            background-color: var(--branco);
-            color: var(--azul-escuro);
-            padding: 10px 20px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .download-btn:hover {
-            background-color: var(--laranja);
-            color: var(--branco);
-        }
-
-        /* Seção Cadastro */
-        .cadastro {
-            padding: 5rem 0;
-            text-align: center;
-        }
-
-        .cadastro-box {
-            background-color: var(--cinza-claro);
-            padding: 3rem;
-            border-radius: 15px;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .cadastro-box h2 {
-            color: var(--azul-escuro);
-            margin-bottom: 1rem;
-        }
-
-        .cadastro-box p {
-            margin-bottom: 2rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-            text-align: left;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-        }
-
-        /* Footer */
-        footer {
-            background-color: var(--azul-escuro);
-            color: var(--branco);
-            padding: 3rem 0 1.5rem;
-        }
-
-        .footer-content {
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 2rem;
-            margin-bottom: 2rem;
-        }
-
-        .footer-column {
-            flex: 1;
-            min-width: 200px;
-        }
-
-        .footer-column h3 {
-            color: var(--laranja);
-            margin-bottom: 1.5rem;
-            font-size: 1.2rem;
-        }
-
-        .footer-links {
-            list-style: none;
-        }
-
-        .footer-links li {
-            margin-bottom: 0.8rem;
-        }
-
-        .footer-links a {
-            color: var(--branco);
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-
-        .footer-links a:hover {
-            color: var(--laranja-claro);
-        }
-
-        .social-icons {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .social-icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 40px;
-            height: 40px;
-            background-color: var(--azul-medio);
-            border-radius: 50%;
-            color: var(--branco);
-            text-decoration: none;
-            transition: all 0.3s;
-        }
-
-        .social-icon:hover {
-            background-color: var(--laranja);
-            transform: translateY(-3px);
-        }
-
-        .copyright {
-            text-align: center;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--azul-medio);
-            font-size: 0.9rem;
-            opacity: 0.8;
-        }
-
-        /* Responsividade */
-        @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-                position: absolute;
-                top: 100%;
-                left: 0;
-                width: 100%;
-                background-color: var(--azul-escuro);
-                flex-direction: column;
-                padding: 1rem 0;
-                text-align: center;
-                box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
-            }
-
-            .nav-links.active {
-                display: flex;
-            }
-
-            .mobile-menu {
-                display: block;
-            }
-
-            .hero h2 {
-                font-size: 2rem;
-            }
-
-            .section-title h2 {
-                font-size: 1.8rem;
-            }
-
-            .app-content {
-                flex-direction: column;
-            }
-
-            .download-buttons {
-                justify-content: center;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <!-- Header -->
@@ -600,25 +118,13 @@
             </div>
             <div class="lojas-grid">
                 <div class="loja-card">
-                    <div class="loja-icon">🛒</div>
-                    <h3>Supermercados</h3>
-                    <p>Acumule pontos em todas as suas compras de supermercado.</p>
+                    <div class="logo-container">
+                        <img src="point.jpg" alt="Point do açaí" class="logo-parceira">
+                    </div>
+                    <h3>Point' do açaí</h3>
+                    <p>Acumule pontos em todas as suas compras no Point' do açaí</p>
                 </div>
-                <div class="loja-card">
-                    <div class="loja-icon">🍔</div>
-                    <h3>Lanchonetes</h3>
-                    <p>Transforme seu lanche em pontos para descontos futuros.</p>
-                </div>
-                <div class="loja-card">
-                    <div class="loja-icon">👕</div>
-                    <h3>Lojas de Roupas</h3>
-                    <p>Compre moda local e ganhe recompensas.</p>
-                </div>
-                <div class="loja-card">
-                    <div class="loja-icon">💊</div>
-                    <h3>Farmácias</h3>
-                    <p>Até seus medicamentos podem render pontos.</p>
-                </div>
+                <!-- Você pode adicionar mais lojas aqui -->
             </div>
         </div>
     </section>
@@ -629,38 +135,21 @@
             <div class="app-content">
                 <div class="app-text">
                     <h2>Baixe o App LocalPoints</h2>
-                    <p>Tenha todos os benefícios do clube de vantagens na palma da sua mão. Escaneie QR Codes, acompanhe seus pontos e descubra ofertas exclusivas.
-                  </p>
-                 
-                 <div class="download-buttons">
+                    <p>Tenha todos os benefícios do clube de vantagens na palma da sua mão. Escaneie QR Codes, acompanhe seus pontos e descubra ofertas exclusivas.</p>
+                    <div class="download-buttons">
                         <a href="#" class="download-btn">
                             <span>📱</span> Disponível em breve para Android
                         </a>
                         <a href="#" class="download-btn">
-                            <span>📱</span> Disponível em breve para ios
+                            <span>📱</span> Disponível em breve para iOS
                         </a>
-                    </div>
-                    
-                </div>
-            <!--
-            Implementação futura, base de teste
-            
-               <div class="app-image">
-                   
-                    <div style="background-color: var(--branco); width: 250px; height: 500px; margin: 0 auto; border-radius: 30px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-                        <div style="background: linear-gradient(135deg, var(--azul-escuro) 0%, var(--azul-medio) 100%); height: 100px; border-radius: 20px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">LocalPoints</div>
-                        <div style="background-color: var(--cinza-claro); height: 60px; border-radius: 10px; margin-bottom: 15px; display: flex; align-items: center; padding: 0 15px;">Meus Pontos: 1.250</div>
-                        <div style="background-color: var(--cinza-claro); height: 60px; border-radius: 10px; margin-bottom: 15px; display: flex; align-items: center; padding: 0 15px;">Lojas Próximas</div>
-                        <div style="background-color: var(--cinza-claro); height: 60px; border-radius: 10px; margin-bottom: 15px; display: flex; align-items: center; padding: 0 15px;">Ofertas Exclusivas</div>
-                        <div style="background-color: var(--laranja); height: 50px; border-radius: 25px; margin-top: 30px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">Escanear QR Code</div>
                     </div>
                 </div>
             </div>
         </div>
-        --> 
     </section>
 
-        <!-- Seção Cadastro -->
+    <!-- Seção Cadastro -->
     <section id="cadastro" class="cadastro">
         <div class="container">
             <div class="section-title">
@@ -670,9 +159,9 @@
             <div class="cadastro-box">
                 <h2>Cadastro Gratuito</h2>
                 <p>Entre em contato através do e-mail ou whatsapp, e faça cadastro do seu estabelecimento em nosso clube!</p>
-                  <a href="https://Wa.me/+554488430517" class="cta-button">Whatsapp</a>
-                  <p></p>
-                  <a href="mailto:celestdevs@gmail.com?subject=Contato%20via%20site&body=Cadastro da minha loja" class="cta-button">E-mail</a>
+                <a href="https://wa.me/+554488430517" class="cta-button">Whatsapp</a>
+                <p></p>
+                <a href="mailto:contato@empresa.com?subject=Contato%20via%20site&body=Cadastro da minha loja" class="cta-button">E-mail</a>
             </div>
         </div>
     </section>
@@ -685,10 +174,6 @@
                     <h3>LocalPoints</h3>
                     <p>O clube de vantagens que conecta você ao comércio local.</p>
                     <div class="social-icons">
-                       <!--
-                       <a href="#" class="social-icon">f</a>
-                        <a href="#" class="social-icon">in</a>
-                         -->
                         <a href="https://www.instagram.com/local_points?igsh=d2I4dXBsemY2cm1t" class="social-icon">IG</a>
                     </div>
                 </div>
@@ -701,20 +186,11 @@
                         <li><a href="#app">Baixar App</a></li>
                     </ul>
                 </div>
-              <!--  <div class="footer-column">
-                    <h3>Suporte</h3>
-                    <ul class="footer-links">
-                        <li><a href="#">Perguntas Frequentes</a></li>
-                        <li><a href="#">Fale Conosco</a></li>
-                        <li><a href="#">Política de Privacidade</a></li>
-                        <li><a href="#">Termos de Uso</a></li>
-                    </ul>
-                </div>  -->
                 <div class="footer-column">
                     <h3>Contato</h3>
                     <ul class="footer-links">
                         <li>celestdevs@gmail.com</li>
-                        <li>(44) 98843-0517</li>
+                        <li>(55) 4498843-0517</li>
                         <li>Segunda a Sexta, 9h às 18h</li>
                     </ul>
                 </div>
@@ -725,28 +201,6 @@
         </div>
     </footer>
 
-    <script>
-        // Menu mobile
-        document.querySelector('.mobile-menu').addEventListener('click', function() {
-            document.querySelector('.nav-links').classList.toggle('active');
-        });
-
-        // Fechar menu ao clicar em um link
-        document.querySelectorAll('.nav-links a').forEach(link => {
-            link.addEventListener('click', function() {
-                document.querySelector('.nav-links').classList.remove('active');
-            });
-        });
-
-        // Animação simples ao rolar
-        window.addEventListener('scroll', function() {
-            const header = document.querySelector('header');
-            if (window.scrollY > 50) {
-                header.style.boxShadow = '0 5px 15px rgba(0, 0, 0, 0.1)';
-            } else {
-                header.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
-            }
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
-            </html>
+</html>
