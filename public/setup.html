@@ -129,8 +129,10 @@ async function runSetup() {
 
     // 2. Grava o perfil do admin — precisa ser o PRIMEIRO write, pois as
     //    regras seguintes (settings/public etc.) exigem role === 'admin'
-    //    já presente no banco.
-    await db.ref('users/' + uid).set({
+    //    já presente no banco. update() em vez de set(): cada campo é
+    //    validado contra sua própria regra independentemente — set() no nó
+    //    pai exigiria a permissão do nó inteiro também, que o bootstrap não tem.
+    await db.ref('users/' + uid).update({
       role: 'admin',
       status: 'ativo',
       name,

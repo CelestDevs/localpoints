@@ -971,7 +971,7 @@ async function saveEmpresa() {
 
       try {
         await db.ref('empresas/' + empresaId).set(empresaData);
-        await db.ref('users/' + ownerUid).set({
+        await db.ref('users/' + ownerUid).update({
           role: 'empresa', status: 'ativo', isOwner: true, empresaId,
           name: ownerName, email: ownerEmail, createdAt: Date.now()
         });

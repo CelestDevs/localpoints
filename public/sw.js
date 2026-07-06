@@ -7,7 +7,7 @@
 // ═══════════════════════════════════════════════════════════════
 
 // ATENÇÃO: mude este valor a cada deploy para invalidar o cache
-const BUILD_ID    = '060720261355';
+const BUILD_ID    = '060720261430';
 const CACHE_NAME  = 'localpoints-v' + BUILD_ID;
 
 // Recursos estáticos que podem ser cacheados com segurança

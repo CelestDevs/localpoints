@@ -235,7 +235,6 @@
     try {
       cred = await auth.createUserWithEmailAndPassword(email, password);
       const uid = cred.user.uid;
-      console.log('[doRegister] Conta criada no Auth, uid =', uid);
 
       const profile = {
         role: 'usuario',
@@ -248,28 +247,17 @@
       };
       if (phone) profile.phone = normalizePhone(phone);
 
-      console.log('[doRegister] Tentando gravar perfil em /users/' + uid, profile);
-      await db.ref('users/' + uid).set(profile);
-      console.log('[doRegister] Perfil gravado com sucesso.');
-
-      console.log('[doRegister] Tentando gravar /codigosUnicos/' + profile.uniqueCode);
+      // update() em vez de set(): cada campo é validado contra sua própria
+      // regra independentemente. set() no nó pai (/users/{uid}) exige a
+      // permissão do NÓ INTEIRO também, que autocadastro nunca tem — só as
+      // regras de campo individuais concedem acesso aqui.
+      await db.ref('users/' + uid).update(profile);
       await db.ref('codigosUnicos/' + profile.uniqueCode).set(uid);
-      console.log('[doRegister] codigosUnicos gravado com sucesso.');
-
-      if (phone) {
-        console.log('[doRegister] Tentando gravar /telefones/' + profile.phone);
-        await db.ref('telefones/' + profile.phone).set(uid);
-        console.log('[doRegister] telefones gravado com sucesso.');
-      }
+      if (phone) await db.ref('telefones/' + profile.phone).set(uid);
 
       redirecting = true;
       window.location.replace('usuario/index.html');
     } catch (err) {
-      // Fica no console mesmo que a tela mude de alguma forma — abra o
-      // DevTools (F12) → Console pra ver o erro completo, com code/message.
-      // Os logs "[doRegister] Tentando gravar..." acima mostram exatamente
-      // qual escrita chegou a começar antes do erro — a última delas, sem
-      // o "gravado com sucesso" correspondente, é a que travou.
       console.error('[doRegister] Falha no cadastro:', err);
 
       // Se a conta no Auth já foi criada mas o perfil no banco falhou, a

@@ -1454,7 +1454,7 @@ async function saveFuncionario() {
 
       const { uid: novoUid, idToken: novoIdToken } = await createFirebaseUser(email, senha);
       try {
-        await db.ref('users/' + novoUid).set({
+        await db.ref('users/' + novoUid).update({
           role: 'empresa', status: 'ativo', isOwner: false, empresaId,
           name: nome, email, permissions, createdAt: Date.now()
         });
