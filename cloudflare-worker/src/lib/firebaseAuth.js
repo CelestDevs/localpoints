@@ -72,8 +72,12 @@ export async function verifyFirebaseIdToken(idToken, projectId) {
   const now = Math.floor(Date.now() / 1000);
   if (typeof payload.exp !== 'number' || payload.exp < now) throw authError('Token expirado.');
   if (typeof payload.iat === 'number' && payload.iat > now + 60) throw authError('Token com iat no futuro.');
-  if (payload.aud !== projectId) throw authError('Audience do token não corresponde a este projeto.');
-  if (payload.iss !== `https://securetoken.google.com/${projectId}`) throw authError('Issuer do token inválido.');
+  if (payload.aud !== projectId) {
+    throw authError(`Audience do token ("${payload.aud}") não corresponde ao FIREBASE_PROJECT_ID configurado na Worker ("${projectId}").`);
+  }
+  if (payload.iss !== `https://securetoken.google.com/${projectId}`) {
+    throw authError(`Issuer do token ("${payload.iss}") não corresponde ao esperado ("https://securetoken.google.com/${projectId}").`);
+  }
   if (!payload.sub) throw authError('Token sem uid (sub).');
 
   const jwks = await getJWKS();
