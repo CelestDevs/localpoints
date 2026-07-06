@@ -167,6 +167,9 @@
     if (code === 'auth/user-disabled')          return 'Esta conta foi desativada.';
     if (code === 'auth/email-already-in-use')   return 'Este e-mail já está cadastrado.';
     if (code === 'auth/weak-password')          return 'Senha deve ter no mínimo 6 caracteres.';
+    if (code === 'PERMISSION_DENIED' || /permission_denied/i.test(err.message || '')) {
+      return 'O banco de dados recusou a operação (regras de segurança desatualizadas ou incorretas). Avise o administrador do sistema — isso não é um erro de digitação sua.';
+    }
     return err.message || 'Erro desconhecido.';
   }
 
@@ -220,9 +223,11 @@
     if (password.length < 6) { showErr('Senha deve ter no mínimo 6 caracteres.'); return; }
 
     btn.disabled = true; btn.textContent = 'Criando conta...';
+
+    let cred = null;
     try {
-      const cred = await auth.createUserWithEmailAndPassword(email, password);
-      const uid  = cred.user.uid;
+      cred = await auth.createUserWithEmailAndPassword(email, password);
+      const uid = cred.user.uid;
 
       const profile = {
         role: 'usuario',
@@ -242,6 +247,13 @@
       redirecting = true;
       window.location.replace('usuario/index.html');
     } catch (err) {
+      // Se a conta no Auth já foi criada mas o perfil no banco falhou, a
+      // conta ficaria "órfã" — existe no Auth, mas sem cadastro, e a pessoa
+      // nunca mais conseguiria recriar (já existe) nem logar (sem perfil).
+      // Desfaz a conta do Auth pra permitir tentar de novo do zero.
+      if (cred && cred.user) {
+        try { await cred.user.delete(); } catch (delErr) { /* melhor esforço */ }
+      }
       showErr(mapAuthError(err));
       btn.disabled = false; btn.textContent = 'CRIAR CONTA';
     }

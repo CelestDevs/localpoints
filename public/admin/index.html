@@ -954,7 +954,7 @@ async function saveEmpresa() {
       if (ownerPassword.length < 6) throw new Error('Senha do responsável deve ter no mínimo 6 caracteres.');
 
       const empresaId = db.ref('empresas').push().key;
-      const ownerUid   = await createFirebaseUser(ownerEmail, ownerPassword);
+      const { uid: ownerUid, idToken: ownerIdToken } = await createFirebaseUser(ownerEmail, ownerPassword);
 
       const empresaData = {
         name, cnpj, category, phone, description,
@@ -969,15 +969,22 @@ async function saveEmpresa() {
       };
       if (status === 'ativo') { empresaData.approvedAt = Date.now(); empresaData.approvedBy = currentAdmin.uid; }
 
-      await db.ref('empresas/' + empresaId).set(empresaData);
-      await db.ref('users/' + ownerUid).set({
-        role: 'empresa', status: 'ativo', isOwner: true, empresaId,
-        name: ownerName, email: ownerEmail, createdAt: Date.now()
-      });
-      await db.ref('funcionarios/' + empresaId + '/' + ownerUid).set({
-        nome: ownerName, status: 'ativo', isOwner: true,
-        permissions: { lancarPontos: true, resgatarRecompensas: true, gerenciarClientes: true, gerenciarRecompensas: true }
-      });
+      try {
+        await db.ref('empresas/' + empresaId).set(empresaData);
+        await db.ref('users/' + ownerUid).set({
+          role: 'empresa', status: 'ativo', isOwner: true, empresaId,
+          name: ownerName, email: ownerEmail, createdAt: Date.now()
+        });
+        await db.ref('funcionarios/' + empresaId + '/' + ownerUid).set({
+          nome: ownerName, status: 'ativo', isOwner: true,
+          permissions: { lancarPontos: true, resgatarRecompensas: true, gerenciarClientes: true, gerenciarRecompensas: true }
+        });
+      } catch (writeErr) {
+        // A conta do responsável já foi criada no Auth — sem desfazer, ela
+        // fica órfã (existe, sem empresa, e não dá pra recriar com esse e-mail).
+        await deleteFirebaseUser(ownerIdToken);
+        throw writeErr;
+      }
 
       await auditLog('empresa.criar', { type: 'empresa', id: empresaId, label: name }, { status, ownerEmail });
       showToast('Empresa cadastrada.', 'success');

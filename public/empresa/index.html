@@ -1452,14 +1452,19 @@ async function saveFuncionario() {
       if (!email || !senha) throw new Error('Informe e-mail e senha inicial.');
       if (senha.length < 6) throw new Error('Senha deve ter no mínimo 6 caracteres.');
 
-      const novoUid = await createFirebaseUser(email, senha);
-      await db.ref('users/' + novoUid).set({
-        role: 'empresa', status: 'ativo', isOwner: false, empresaId,
-        name: nome, email, permissions, createdAt: Date.now()
-      });
-      await db.ref('funcionarios/' + empresaId + '/' + novoUid).set({
-        nome, permissions, status: 'ativo', isOwner: false
-      });
+      const { uid: novoUid, idToken: novoIdToken } = await createFirebaseUser(email, senha);
+      try {
+        await db.ref('users/' + novoUid).set({
+          role: 'empresa', status: 'ativo', isOwner: false, empresaId,
+          name: nome, email, permissions, createdAt: Date.now()
+        });
+        await db.ref('funcionarios/' + empresaId + '/' + novoUid).set({
+          nome, permissions, status: 'ativo', isOwner: false
+        });
+      } catch (writeErr) {
+        await deleteFirebaseUser(novoIdToken);
+        throw writeErr;
+      }
       await auditLog('funcionario.criar', { type: 'usuario', id: novoUid, label: nome }, { permissions });
       showToast('Funcionário cadastrado.', 'success');
     }

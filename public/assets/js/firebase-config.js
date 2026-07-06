@@ -21,12 +21,15 @@ const db   = firebase.database();
 // ─── Cria usuário via REST (não desloga quem está logado) ───
 // Usado pelo admin ao cadastrar empresas, pela empresa ao cadastrar funcionários,
 // e pelo próprio usuário ao se registrar.
+// Retorna { uid, idToken } — o idToken serve só para desfazer a criação
+// (deleteFirebaseUser) se os writes seguintes no RTDB falharem, evitando
+// contas "órfãs" (existem no Auth, sem perfil, e não dá pra recriar nem logar).
 async function createFirebaseUser(email, password) {
   const url = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${firebaseConfig.apiKey}`;
   const res  = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, returnSecureToken: false })
+    body: JSON.stringify({ email, password, returnSecureToken: true })
   });
   const data = await res.json();
   if (data.error) {
@@ -38,7 +41,18 @@ async function createFirebaseUser(email, password) {
     const key = Object.keys(map).find(k => (data.error.message || '').includes(k));
     throw new Error(key ? map[key] : data.error.message);
   }
-  return data.localId;
+  return { uid: data.localId, idToken: data.idToken };
+}
+
+// ─── Desfaz a criação de uma conta (rollback de melhor esforço) ───
+async function deleteFirebaseUser(idToken) {
+  try {
+    await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:delete?key=${firebaseConfig.apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idToken })
+    });
+  } catch (e) { /* melhor esforço — se falhar, é preciso apagar manualmente no console do Firebase Auth */ }
 }
 
 // ─── Helpers de formatação ───
