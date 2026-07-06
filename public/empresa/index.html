@@ -526,10 +526,24 @@ auth.onAuthStateChanged(async user => {
     const snap = await db.ref('users/' + user.uid).once('value');
     const ud = snap.val();
     if (!ud || ud.role !== 'empresa') { window.location.replace('../index.html'); return; }
+    if (ud.status === 'bloqueado' || ud.status === 'suspenso') {
+      await auth.signOut();
+      window.location.replace('../index.html?bloqueado=1');
+      return;
+    }
 
     currentUser = { uid: user.uid, ...ud };
     empresaId = ud.empresaId;
     window._auditActor = { uid: user.uid, name: ud.name, email: ud.email, role: 'empresa' };
+
+    // Escuta em tempo real o próprio status — se o dono bloquear o
+    // funcionário enquanto o app já está aberto, derruba a sessão na hora.
+    db.ref('users/' + user.uid + '/status').on('value', statusSnap => {
+      const status = statusSnap.val();
+      if (status === 'bloqueado' || status === 'suspenso') {
+        auth.signOut().then(() => window.location.replace('../index.html?bloqueado=1'));
+      }
+    });
 
     document.getElementById('empresa-name').textContent = ud.name || ud.email;
     document.getElementById('empresa-role-label').textContent = ud.isOwner ? 'RESPONSÁVEL' : 'FUNCIONÁRIO';

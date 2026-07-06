@@ -172,6 +172,7 @@
 
         <div id="conquistas-tab-ranking" class="hidden">
           <div class="card" id="ranking-temporada-card">
+            <img id="ranking-temporada-banner" src="" alt="" style="width:100%;height:110px;object-fit:cover;border-radius:var(--r);margin-bottom:12px;display:none">
             <div class="card-header"><div class="card-title"><i data-lucide="calendar-range"></i> <span id="ranking-temporada-nome">Temporada atual</span></div></div>
             <div id="ranking-temporada-list"><div class="empty-state"><div class="empty-sub">Nenhuma temporada ativa no momento.</div></div></div>
           </div>
@@ -262,6 +263,63 @@
   </div>
 </div>
 
+<!-- MODAL — Perfil da Empresa -->
+<div class="modal-overlay" id="modal-empresa-perfil">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <div class="modal-title" id="empresa-perfil-titulo"><i data-lucide="store"></i> Empresa</div>
+      <button class="modal-close" onclick="closeModal('modal-empresa-perfil')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <img id="empresa-perfil-banner" src="" alt="" style="width:100%;height:130px;object-fit:cover;border-radius:var(--rl);margin-bottom:14px;display:none">
+      <div class="d-flex gap-12 align-center mb-16">
+        <img id="empresa-perfil-logo" src="" alt="" style="width:56px;height:56px;border-radius:12px;object-fit:cover;background:var(--bg-3);display:none;flex-shrink:0">
+        <div style="min-width:0">
+          <div class="entity-name" id="empresa-perfil-nome" style="font-size:17px">—</div>
+          <div class="entity-sub" id="empresa-perfil-categoria">—</div>
+        </div>
+      </div>
+      <p class="text-secondary text-sm mb-12" id="empresa-perfil-descricao"></p>
+      <div class="d-flex gap-8 flex-wrap mb-16">
+        <div class="points-chip"><span class="logo-dot"></span> <span id="empresa-perfil-saldo">0</span> pts aqui</div>
+        <div class="badge badge-teal" id="empresa-perfil-cashback-badge" style="display:none">Cashback disponível</div>
+      </div>
+      <div class="section-title"><i data-lucide="gift"></i> Recompensas disponíveis</div>
+      <div id="empresa-perfil-recompensas-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL — Confirmar ação (genérico) -->
+<div class="modal-overlay" id="modal-confirmar">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="confirmar-titulo"><i data-lucide="help-circle"></i> Confirmar</div>
+    </div>
+    <div class="modal-body">
+      <p id="confirmar-mensagem" class="text-secondary" style="line-height:1.6"></p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="_resolverConfirmar(false)">Cancelar</button>
+      <button class="btn btn-primary" id="confirmar-btn-ok" onclick="_resolverConfirmar(true)">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL — Sucesso (genérico) -->
+<div class="modal-overlay" id="modal-sucesso">
+  <div class="modal" style="text-align:center">
+    <div class="modal-body" style="padding-top:32px">
+      <div class="sucesso-icon"><i data-lucide="check"></i></div>
+      <div class="modal-title" id="sucesso-titulo" style="justify-content:center;margin-top:16px">Sucesso!</div>
+      <p id="sucesso-mensagem" class="text-secondary mt-8" style="line-height:1.6"></p>
+    </div>
+    <div class="modal-footer" style="justify-content:center">
+      <button class="btn btn-primary" onclick="closeModal('modal-sucesso')">Entendi</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL — Ver chaveamento (somente leitura) -->
 <div class="modal-overlay" id="modal-ver-chaveamento">
   <div class="modal modal-wide">
@@ -290,9 +348,23 @@ auth.onAuthStateChanged(async user => {
     const snap = await db.ref('users/' + user.uid).once('value');
     const ud = snap.val();
     if (!ud || ud.role !== 'usuario') { window.location.replace('../index.html'); return; }
+    if (ud.status === 'bloqueado' || ud.status === 'suspenso') {
+      await auth.signOut();
+      window.location.replace('../index.html?bloqueado=1');
+      return;
+    }
 
     currentUser = { uid: user.uid, ...ud };
     window._auditActor = { uid: user.uid, name: ud.name, email: ud.email, role: 'usuario' };
+
+    // Escuta em tempo real o próprio status — se o admin bloquear enquanto o
+    // app já está aberto, derruba a sessão na hora, não só no próximo login.
+    db.ref('users/' + user.uid + '/status').on('value', statusSnap => {
+      const status = statusSnap.val();
+      if (status === 'bloqueado' || status === 'suspenso') {
+        auth.signOut().then(() => window.location.replace('../index.html?bloqueado=1'));
+      }
+    });
 
     document.getElementById('user-name').textContent = ud.name || ud.email;
     document.getElementById('unique-code-display').textContent = ud.uniqueCode || '————————';
@@ -337,6 +409,25 @@ function showToast(msg, type = 'info') {
 
 function openModal(id) { document.getElementById(id).classList.add('open'); renderIcons(); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+let _confirmarResolve = null;
+function confirmarAcao(titulo, mensagem, textoBotao = 'Confirmar') {
+  document.getElementById('confirmar-titulo').innerHTML = `<i data-lucide="help-circle"></i> ${esc(titulo)}`;
+  document.getElementById('confirmar-mensagem').textContent = mensagem;
+  document.getElementById('confirmar-btn-ok').textContent = textoBotao;
+  openModal('modal-confirmar');
+  return new Promise(resolve => { _confirmarResolve = resolve; });
+}
+function _resolverConfirmar(valor) {
+  closeModal('modal-confirmar');
+  if (_confirmarResolve) { _confirmarResolve(valor); _confirmarResolve = null; }
+}
+
+function mostrarSucesso(titulo, mensagem) {
+  document.getElementById('sucesso-titulo').textContent = titulo;
+  document.getElementById('sucesso-mensagem').textContent = mensagem;
+  openModal('modal-sucesso');
+}
 
 const PAGE_TITLES = { carteira: 'Carteira', recompensas: 'Recompensas', cashback: 'Cashback', conquistas: 'Conquistas', campeonatos: 'Campeonatos', perfil: 'Meu Perfil' };
 
@@ -498,7 +589,19 @@ async function loadCatalogo() {
         const ativas = Object.entries(recs).filter(([, r]) => r.status === 'ativo' && (r.quantidadeDisponivel ?? 0) > 0);
         if (!ativas.length) return;
         const saldo = walletSaldos[empresaId] || 0;
-        html += `<div class="section-title">${esc(empresas[empresaId].name)} <span class="text-muted text-xs">(seu saldo: ${saldo} pts)</span></div>`;
+        const emp = empresas[empresaId];
+        const logo = emp.logoUrl
+          ? `<img class="company-header-logo" src="${esc(emp.logoUrl)}" alt="">`
+          : `<div class="company-header-logo"><i data-lucide="store"></i></div>`;
+        html += `
+          <div class="company-header" onclick="verEmpresa('${empresaId}')">
+            ${logo}
+            <div class="company-header-info">
+              <div class="company-header-name">${esc(emp.name)}</div>
+              <div class="company-header-sub">${saldo} pts aqui · toque para ver detalhes</div>
+            </div>
+            <div class="company-header-chevron"><i data-lucide="chevron-right"></i></div>
+          </div>`;
         html += ativas.map(([recId, r]) => `
           <div class="entity-card ${saldo >= r.valorPontos ? 'ativo' : 'pendente'}">
             <div>
@@ -519,20 +622,73 @@ async function loadCatalogo() {
   }
 }
 
+const CATEGORIA_LABELS = {
+  alimentacao: 'Alimentação', vestuario: 'Vestuário', beleza: 'Beleza e Estética',
+  saude: 'Saúde', servicos: 'Serviços', outros: 'Outros'
+};
+
+async function verEmpresa(empresaId) {
+  try {
+    const [empSnap, recSnap] = await Promise.all([
+      db.ref('empresas/' + empresaId).once('value'),
+      db.ref('recompensas/' + empresaId).once('value')
+    ]);
+    const emp = empSnap.val();
+    if (!emp) { showToast('Empresa não encontrada.', 'error'); return; }
+
+    document.getElementById('empresa-perfil-titulo').innerHTML = `<i data-lucide="store"></i> ${esc(emp.name)}`;
+    document.getElementById('empresa-perfil-nome').textContent = emp.name || '—';
+    document.getElementById('empresa-perfil-categoria').textContent = CATEGORIA_LABELS[emp.category] || emp.category || '—';
+    document.getElementById('empresa-perfil-descricao').textContent = emp.description || '';
+    document.getElementById('empresa-perfil-saldo').textContent = walletSaldos[empresaId] || 0;
+    document.getElementById('empresa-perfil-cashback-badge').style.display = emp.cashback?.enabled ? 'inline-flex' : 'none';
+
+    const banner = document.getElementById('empresa-perfil-banner');
+    if (emp.bannerUrl) { banner.src = emp.bannerUrl; banner.style.display = 'block'; } else { banner.style.display = 'none'; }
+    const logo = document.getElementById('empresa-perfil-logo');
+    if (emp.logoUrl) { logo.src = emp.logoUrl; logo.style.display = 'block'; } else { logo.style.display = 'none'; }
+
+    const recs = recSnap.val() || {};
+    const ativas = Object.entries(recs).filter(([, r]) => r.status === 'ativo' && (r.quantidadeDisponivel ?? 0) > 0);
+    const saldo = walletSaldos[empresaId] || 0;
+    const listEl = document.getElementById('empresa-perfil-recompensas-list');
+    listEl.innerHTML = ativas.length ? ativas.map(([recId, r]) => `
+      <div class="entity-card ${saldo >= r.valorPontos ? 'ativo' : 'pendente'}">
+        <div>
+          <div class="entity-name">${esc(r.nome)} <span class="badge badge-accent">${formatPoints(r.valorPontos)}</span></div>
+          <div class="entity-sub">${esc(r.descricao || '')}</div>
+        </div>
+        <div class="entity-actions">
+          <button class="btn btn-primary btn-sm" ${saldo < r.valorPontos ? 'disabled' : ''} onclick="closeModal('modal-empresa-perfil');solicitarResgate('${empresaId}','${recId}')"><i data-lucide="gift"></i> Resgatar</button>
+        </div>
+      </div>`).join('') : '<div class="empty-state"><div class="empty-sub">Nenhuma recompensa disponível no momento.</div></div>';
+
+    openModal('modal-empresa-perfil');
+  } catch (e) {
+    showToast('Erro ao carregar empresa: ' + e.message, 'error');
+  }
+}
+
 async function solicitarResgate(empresaId, recompensaId) {
   try {
     const rec = (await db.ref('recompensas/' + empresaId + '/' + recompensaId).once('value')).val();
     if (!rec) throw new Error('Recompensa não encontrada.');
     const saldo = walletSaldos[empresaId] || 0;
     if (saldo < rec.valorPontos) throw new Error('Saldo insuficiente.');
-    if (!confirm(`Solicitar resgate de "${rec.nome}" por ${rec.valorPontos} pontos? A empresa confirma a entrega.`)) return;
+
+    const ok = await confirmarAcao(
+      'Solicitar resgate',
+      `Resgatar "${rec.nome}" por ${rec.valorPontos} pontos? A empresa confirma a entrega pessoalmente.`,
+      'Solicitar'
+    );
+    if (!ok) return;
 
     // A confirmação real (débito de saldo/estoque) só acontece quando a
     // empresa confirmar — isso aqui só registra o pedido como 'pendente'.
     await callApi('/api/solicitar-resgate', { empresaId, recompensaId });
 
     await auditLog('resgate.solicitar', { type: 'recompensa', id: recompensaId, label: rec.nome }, { empresaId });
-    showToast('Pedido enviado! A empresa vai confirmar a entrega.', 'success');
+    mostrarSucesso('Pedido enviado!', `Sua solicitação de "${rec.nome}" foi enviada. A empresa vai confirmar a entrega.`);
     loadMeusResgates();
   } catch (e) {
     showToast('Erro: ' + e.message, 'error');
@@ -653,11 +809,12 @@ async function loadCupons() {
 }
 
 async function marcarCupomUtilizado(cupomId) {
-  if (!confirm('Confirma que já usou este cupom na loja?')) return;
+  const ok = await confirmarAcao('Marcar cupom como utilizado', 'Confirma que já usou este cupom na loja? Essa ação não pode ser desfeita.', 'Marcar como usado');
+  if (!ok) return;
   try {
     await db.ref('cupons/' + currentUser.uid + '/' + cupomId + '/status').set('utilizado');
     await auditLog('cupom.usar', { type: 'cupom', id: cupomId, label: '' }, {});
-    showToast('Cupom marcado como utilizado.', 'success');
+    mostrarSucesso('Cupom utilizado!', 'Marcamos esse cupom como usado. Ele não aparece mais como disponível.');
     loadCupons();
   } catch (e) {
     showToast('Erro: ' + e.message, 'error');
@@ -798,7 +955,11 @@ async function loadRanking() {
     const temporadas = tempSnap.val() || {};
     const temporadaId = Object.keys(temporadas)[0];
     if (temporadaId) {
-      document.getElementById('ranking-temporada-nome').textContent = temporadas[temporadaId].nome;
+      const temporada = temporadas[temporadaId];
+      document.getElementById('ranking-temporada-nome').textContent = temporada.nome;
+      const banner = document.getElementById('ranking-temporada-banner');
+      if (temporada.bannerUrl) { banner.src = temporada.bannerUrl; banner.style.display = 'block'; }
+      else { banner.style.display = 'none'; }
       const rtSnap = await db.ref('ranking_temporada/' + temporadaId).once('value');
       const rtEntradas = [];
       rtSnap.forEach(c => rtEntradas.push({ uid: c.key, ...c.val() }));
@@ -861,11 +1022,12 @@ async function loadCampeonatosUsuario() {
 async function inscreverCampeonato(campeonatoId) {
   const c = campeonatosCacheUsuario[campeonatoId];
   if (!c) return;
-  if (!confirm(`Inscrever-se em "${c.nome}" por ${c.taxaInscricaoXp || 0} XP?`)) return;
+  const ok = await confirmarAcao('Inscrição no campeonato', `Inscrever-se em "${c.nome}" por ${c.taxaInscricaoXp || 0} XP? Esse valor é debitado na hora.`, 'Inscrever-se');
+  if (!ok) return;
   try {
     await callApi('/api/campeonato/inscrever', { campeonatoId });
     await auditLog('campeonato.inscrever', { type: 'campeonato', id: campeonatoId, label: c.nome }, {});
-    showToast('Inscrição confirmada!', 'success');
+    mostrarSucesso('Inscrição confirmada!', `Você está inscrito em "${c.nome}". Acompanhe o chaveamento por aqui assim que for sorteado.`);
     loadCampeonatosUsuario();
   } catch (e) {
     showToast('Erro: ' + e.message, 'error');

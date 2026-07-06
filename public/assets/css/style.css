@@ -19,11 +19,14 @@
   /* dourado — pontos / moeda / ação primária */
   --gold:      #F2C265;
   --gold-dim:  rgba(242,194,101,.14);
+  --gold-glow: rgba(242,194,101,.7);
+  --gold-soft: rgba(242,194,101,.10);
   --gold-deep: #7A5A1E;
 
   /* verde-água — comércio local / crescimento / sucesso */
   --teal:      #7FD8BE;
   --teal-dim:  rgba(127,216,190,.14);
+  --teal-border: rgba(127,216,190,.3);
 
   /* violeta — gamificação / conquistas */
   --violet:      #C6A8F5;
@@ -70,7 +73,7 @@ html,body{height:100%;background:var(--bg-0);color:var(--text-primary);font-fami
 .sidebar-logo{padding:16px 16px 14px;border-bottom:1px solid var(--border);background:var(--bg-0)}
 .logo-mark{display:flex;align-items:center;gap:6px}
 .logo-local{font-family:var(--font-d);font-size:19px;font-weight:800;color:var(--white);letter-spacing:-.2px;line-height:1}
-.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px 1px rgba(242,194,101,.7);flex-shrink:0}
+.logo-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px 1px var(--gold-glow);flex-shrink:0}
 .logo-points{font-family:var(--font-d);font-size:19px;font-weight:800;color:var(--gold);letter-spacing:-.2px;line-height:1}
 .logo-sub{font-family:var(--font-b);font-size:11px;color:var(--text-secondary);letter-spacing:.5px;margin-top:3px;display:block;opacity:.9}
 
@@ -201,7 +204,7 @@ tbody td{padding:10px 13px;color:var(--text-primary);font-size:13px}
 
 /* ══ ALERTS ══ */
 .alert{padding:11px 13px;border-radius:var(--r);margin-bottom:12px;font-size:13px;border:1px solid;display:flex;align-items:flex-start;gap:7px}
-.alert-info{background:var(--teal-dim);border-color:rgba(127,216,190,.3);color:var(--teal)}
+.alert-info{background:var(--teal-dim);border-color:var(--teal-border);color:var(--teal)}
 .alert-success{background:var(--green-dim);border-color:rgba(146,217,164,.3);color:var(--green)}
 .alert-warning{background:var(--orange-dim);border-color:rgba(245,166,91,.3);color:var(--orange)}
 .alert-danger{background:var(--red-dim);border-color:rgba(240,147,138,.3);color:var(--red)}
@@ -223,13 +226,13 @@ tbody td{padding:10px 13px;color:var(--text-primary);font-size:13px}
 
 /* ══ LOGIN / SETUP PAGE ══ */
 .login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg-0);position:relative;overflow:hidden;padding:16px}
-.login-bg-glow{position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(242,194,101,.10) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
+.login-bg-glow{position:absolute;width:600px;height:600px;background:radial-gradient(circle,var(--gold-soft) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
 .login-box{position:relative;background:var(--bg-1);border:1px solid var(--border);border-radius:28px;padding:32px 28px;width:100%;max-width:400px;box-shadow:0 1px 3px rgba(0,0,0,.3),0 4px 24px rgba(0,0,0,.35)}
 .login-logo{text-align:center;margin-bottom:24px}
 .login-logo-box{display:inline-flex;align-items:center;gap:8px;background:var(--bg-3);padding:11px 20px;border-radius:16px;margin-bottom:11px}
 .login-logo-local{font-family:var(--font-d);font-size:28px;font-weight:800;color:var(--white);letter-spacing:-.3px;line-height:1}
 .login-logo-points{font-family:var(--font-d);font-size:28px;font-weight:800;color:var(--gold);letter-spacing:-.3px;line-height:1}
-.login-logo-dot{width:10px;height:10px;border-radius:50%;background:var(--gold);box-shadow:0 0 12px 2px rgba(242,194,101,.7);animation:dot-pulse 2.4s ease-in-out infinite}
+.login-logo-dot{width:10px;height:10px;border-radius:50%;background:var(--gold);box-shadow:0 0 12px 2px var(--gold-glow);animation:dot-pulse 2.4s ease-in-out infinite}
 @keyframes dot-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.35);opacity:.7}}
 .login-logo-sub{font-family:var(--font-b);font-size:13px;color:var(--text-secondary);letter-spacing:.3px;margin-top:6px}
 
@@ -254,6 +257,22 @@ tbody td{padding:10px 13px;color:var(--text-primary);font-size:13px}
 .notif-bell svg{width:20px;height:20px}
 .notif-bell:active{background:var(--bg-3);color:var(--white)}
 .notif-badge{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 2px var(--bg-0)}
+
+/* ══ CABEÇALHO CLICÁVEL DA EMPRESA (catálogo) ══ */
+.company-header{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r);margin:14px 0 8px;cursor:pointer;transition:background .15s;-webkit-tap-highlight-color:transparent}
+.company-header:active{background:var(--bg-3)}
+.company-header:first-child{margin-top:0}
+.company-header-logo{width:38px;height:38px;border-radius:9px;object-fit:cover;background:var(--bg-3);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--text-muted)}
+.company-header-logo svg{width:18px;height:18px}
+.company-header-info{flex:1;min-width:0}
+.company-header-name{font-family:var(--font-d);font-weight:700;font-size:14px;color:var(--white);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.company-header-sub{font-size:11px;color:var(--text-muted)}
+.company-header-chevron{color:var(--text-muted);flex-shrink:0}
+.company-header-chevron svg{width:18px;height:18px}
+
+/* ══ MODAL DE SUCESSO (ícone de confirmação) ══ */
+.sucesso-icon{width:64px;height:64px;border-radius:50%;background:var(--green-dim);color:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto}
+.sucesso-icon svg{width:32px;height:32px}
 
 /* ══ UPLOAD DE IMAGEM (com preview) ══ */
 .upload-box{display:flex;align-items:center;gap:14px;padding:12px;background:var(--bg-2);border:1.5px dashed var(--border-bright);border-radius:var(--rl);cursor:pointer;transition:all .15s}

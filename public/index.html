@@ -99,6 +99,10 @@
   }
   switchTab('login');
 
+  if (new URLSearchParams(window.location.search).get('bloqueado') === '1') {
+    showErr('Sua conta foi bloqueada. Fale com o administrador ou responsável pela empresa.');
+  }
+
   function showErr(msg) {
     const el = document.getElementById('error-msg');
     el.textContent = '⚠ ' + msg;

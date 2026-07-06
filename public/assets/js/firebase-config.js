@@ -90,3 +90,40 @@ const STATUS_LABELS = {
   cancelado: 'Cancelado',
   bloqueado: 'Bloqueado'
 };
+
+// ─── Tema personalizado (cor primária/secundária de Admin → Configurações) ───
+// Roda em toda página, mesmo antes do login — /settings/public é público de
+// propósito, exatamente pra isso funcionar na tela de login também.
+function hexToRgba(hex, alpha) {
+  const clean = (hex || '').replace('#', '');
+  if (clean.length !== 6) return null;
+  const bigint = parseInt(clean, 16);
+  const r = (bigint >> 16) & 255;
+  const g = (bigint >> 8) & 255;
+  const b = bigint & 255;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+(function aplicarTemaPersonalizado() {
+  db.ref('settings/public').once('value').then(snap => {
+    const s = snap.val();
+    if (!s) return;
+    const root = document.documentElement;
+    if (s.primaryColor) {
+      root.style.setProperty('--gold', s.primaryColor);
+      const dim = hexToRgba(s.primaryColor, 0.14);
+      const glow = hexToRgba(s.primaryColor, 0.7);
+      const soft = hexToRgba(s.primaryColor, 0.10);
+      if (dim) root.style.setProperty('--gold-dim', dim);
+      if (glow) root.style.setProperty('--gold-glow', glow);
+      if (soft) root.style.setProperty('--gold-soft', soft);
+    }
+    if (s.secondaryColor) {
+      root.style.setProperty('--teal', s.secondaryColor);
+      const dim = hexToRgba(s.secondaryColor, 0.14);
+      const border = hexToRgba(s.secondaryColor, 0.3);
+      if (dim) root.style.setProperty('--teal-dim', dim);
+      if (border) root.style.setProperty('--teal-border', border);
+    }
+  }).catch(() => { /* silencioso — mantém as cores padrão se falhar */ });
+})();
