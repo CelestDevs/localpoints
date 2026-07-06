@@ -1,0 +1,13 @@
+{
+  "name": "local-points",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local Points — plataforma de fidelidade para o comércio local",
+  "scripts": {
+    "build": "node build.js",
+    "deploy": "npm run build && firebase deploy --only hosting"
+  },
+  "devDependencies": {
+    "terser": "^5.31.0"
+  }
+}

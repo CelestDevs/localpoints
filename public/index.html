@@ -1,89 +1,255 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Welcome to Firebase Hosting</title>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Local Points</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#16130F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Local Points">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+</head>
+<body>
 
-    <!-- update the version number as needed -->
-    <script defer src="/__/firebase/12.15.0/firebase-app-compat.js"></script>
-    <!-- include only the Firebase features as you need -->
-    <script defer src="/__/firebase/12.15.0/firebase-auth-compat.js"></script>
-    <script defer src="/__/firebase/12.15.0/firebase-database-compat.js"></script>
-    <script defer src="/__/firebase/12.15.0/firebase-firestore-compat.js"></script>
-    <script defer src="/__/firebase/12.15.0/firebase-functions-compat.js"></script>
-    <script defer src="/__/firebase/12.15.0/firebase-messaging-compat.js"></script>
-    <script defer src="/__/firebase/12.15.0/firebase-storage-compat.js"></script>
-    <script defer src="/__/firebase/12.15.0/firebase-analytics-compat.js"></script>
-    <script defer src="/__/firebase/12.15.0/firebase-remote-config-compat.js"></script>
-    <script defer src="/__/firebase/12.15.0/firebase-performance-compat.js"></script>
-    <!-- 
-      initialize the SDK after all desired features are loaded, set useEmulator to false
-      to avoid connecting the SDK to running emulators.
-    -->
-    <script defer src="/__/firebase/init.js?useEmulator=true"></script>
+<div class="loading-overlay" id="initial-loading">
+  <div class="loading-logo">Local<span class="logo-points">Points</span></div>
+  <div class="spinner"></div>
+</div>
 
-    <style media="screen">
-      body { background: #ECEFF1; color: rgba(0,0,0,0.87); font-family: Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; }
-      #message { background: white; max-width: 360px; margin: 100px auto 16px; padding: 32px 24px; border-radius: 3px; }
-      #message h2 { color: #ffa100; font-weight: bold; font-size: 16px; margin: 0 0 8px; }
-      #message h1 { font-size: 22px; font-weight: 300; color: rgba(0,0,0,0.6); margin: 0 0 16px;}
-      #message p { line-height: 140%; margin: 16px 0 24px; font-size: 14px; }
-      #message a { display: block; text-align: center; background: #039be5; text-transform: uppercase; text-decoration: none; color: white; padding: 16px; border-radius: 4px; }
-      #message, #message a { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
-      #load { color: rgba(0,0,0,0.4); text-align: center; font-size: 13px; }
-      @media (max-width: 600px) {
-        body, #message { margin-top: 0; background: white; box-shadow: none; }
-        body { border-top: 16px solid #ffa100; }
-      }
-    </style>
-  </head>
-  <body>
-    <div id="message">
-      <h2>Welcome</h2>
-      <h1>Firebase Hosting Setup Complete</h1>
-      <p>You're seeing this because you've successfully setup Firebase Hosting. Now it's time to go build something extraordinary!</p>
-      <a target="_blank" href="https://firebase.google.com/docs/hosting/">Open Hosting Documentation</a>
+<div class="login-page" id="login-page" style="display:none">
+  <div class="login-bg-glow"></div>
+
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-box">
+        <span class="login-logo-local">Local</span>
+        <span class="login-logo-dot"></span>
+        <span class="login-logo-points">Points</span>
+      </div>
+      <div class="login-logo-sub">Fidelidade do comércio local</div>
     </div>
-    <p id="load">Firebase SDK Loading&hellip;</p>
 
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        const loadEl = document.querySelector('#load');
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
-        // // The Firebase SDK is initialized and available here!
-        //
-        // firebase.auth().onAuthStateChanged(user => { });
-        // firebase.database().ref('/path/to/ref').on('value', snapshot => { });
-        // firebase.firestore().doc('/foo/bar').get().then(() => { });
-        // firebase.functions().httpsCallable('yourFunction')().then(() => { });
-        // firebase.messaging().requestPermission().then(() => { });
-        // firebase.storage().ref('/path/to/ref').getDownloadURL().then(() => { });
-        // firebase.analytics(); // call to activate
-        // firebase.analytics().logEvent('tutorial_completed');
-        // firebase.performance(); // call to activate
-        //
-        // // 🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥🔥
+    <div id="setup-needed-alert" class="alert alert-warning hidden">
+      Nenhum administrador configurado ainda. <a href="setup.html" style="color:inherit;text-decoration:underline">Acesse o setup inicial</a>.
+    </div>
 
-        try {
-          let app = firebase.app();
-          let features = [
-            'auth', 
-            'database', 
-            'firestore',
-            'functions',
-            'messaging', 
-            'storage', 
-            'analytics', 
-            'remoteConfig',
-            'performance',
-          ].filter(feature => typeof app[feature] === 'function');
-          loadEl.textContent = `Firebase SDK loaded with ${features.join(', ')}`;
-        } catch (e) {
-          console.error(e);
-          loadEl.textContent = 'Error loading the Firebase SDK, check the console.';
+    <div class="d-flex gap-8 mb-16" id="auth-tabs">
+      <button class="btn btn-ghost btn-sm btn-block" id="tab-login" onclick="switchTab('login')">Entrar</button>
+      <button class="btn btn-ghost btn-sm btn-block" id="tab-register" onclick="switchTab('register')">Criar conta</button>
+    </div>
+
+    <div id="error-msg" class="alert alert-danger hidden"></div>
+
+    <!-- LOGIN -->
+    <div id="form-login">
+      <div class="form-group">
+        <label class="form-label">E-mail</label>
+        <input type="email" id="email" class="form-control" placeholder="seu@email.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Senha</label>
+        <input type="password" id="password" class="form-control" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" id="btn-login" onclick="doLogin()">ENTRAR</button>
+    </div>
+
+    <!-- REGISTER (usuário final) -->
+    <div id="form-register" class="hidden">
+      <div class="form-group">
+        <label class="form-label">Nome completo</label>
+        <input type="text" id="r-name" class="form-control" placeholder="Seu nome">
+      </div>
+      <div class="form-group">
+        <label class="form-label">E-mail</label>
+        <input type="email" id="r-email" class="form-control" placeholder="seu@email.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Telefone</label>
+        <input type="tel" id="r-phone" class="form-control" placeholder="(00) 00000-0000">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Senha</label>
+        <input type="password" id="r-password" class="form-control" placeholder="Mínimo 6 caracteres" autocomplete="new-password">
+      </div>
+      <button class="btn btn-primary btn-block btn-lg" id="btn-register" onclick="doRegister()">CRIAR CONTA</button>
+      <p class="form-hint text-center mt-8">É dono de um estabelecimento? Fale com o administrador da plataforma para cadastrar sua empresa.</p>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+  let redirecting = false; // evita loop
+
+  function switchTab(which) {
+    document.getElementById('form-login').classList.toggle('hidden', which !== 'login');
+    document.getElementById('form-register').classList.toggle('hidden', which !== 'register');
+    document.getElementById('tab-login').className    = 'btn btn-sm btn-block ' + (which === 'login'    ? 'btn-primary' : 'btn-ghost');
+    document.getElementById('tab-register').className = 'btn btn-sm btn-block ' + (which === 'register' ? 'btn-primary' : 'btn-ghost');
+    document.getElementById('error-msg').classList.add('hidden');
+  }
+  switchTab('login');
+
+  function showErr(msg) {
+    const el = document.getElementById('error-msg');
+    el.textContent = '⚠ ' + msg;
+    el.classList.remove('hidden');
+  }
+
+  // ── Checar se o setup inicial já rodou ──
+  db.ref('settings/setupDone').once('value')
+    .then(snap => {
+      if (snap.val() !== true) {
+        document.getElementById('setup-needed-alert').classList.remove('hidden');
+      }
+    })
+    .catch(() => {});
+
+  // ── Checar sessão ativa ao carregar ──
+  const authTimeout = setTimeout(() => {
+    document.getElementById('initial-loading').style.display = 'none';
+    document.getElementById('login-page').style.display = 'flex';
+  }, 3000);
+
+  auth.onAuthStateChanged(async user => {
+    if (redirecting) return;
+    clearTimeout(authTimeout);
+
+    if (!user) {
+      document.getElementById('initial-loading').style.display = 'none';
+      document.getElementById('login-page').style.display = 'flex';
+      return;
+    }
+
+    try {
+      const snap = await db.ref('users/' + user.uid).once('value');
+      const ud = snap.val();
+      if (ud && ud.role) {
+        redirecting = true;
+        if (ud.role === 'admin')        window.location.replace('admin/index.html');
+        else if (ud.role === 'empresa') window.location.replace('empresa/index.html');
+        else if (ud.role === 'usuario') window.location.replace('usuario/index.html');
+        else {
+          document.getElementById('initial-loading').style.display = 'none';
+          document.getElementById('login-page').style.display = 'flex';
         }
-      });
-    </script>
-  </body>
+      } else {
+        document.getElementById('initial-loading').style.display = 'none';
+        document.getElementById('login-page').style.display = 'flex';
+      }
+    } catch (e) {
+      document.getElementById('initial-loading').style.display = 'none';
+      document.getElementById('login-page').style.display = 'flex';
+    }
+  });
+
+  function mapAuthError(err) {
+    const code = err.code || '';
+    if (code === 'auth/user-not-found' || code === 'auth/wrong-password' ||
+        code === 'auth/invalid-credential' || code === 'auth/invalid-email') {
+      return 'E-mail ou senha incorretos.';
+    }
+    if (code === 'auth/too-many-requests')      return 'Muitas tentativas. Aguarde alguns minutos.';
+    if (code === 'auth/network-request-failed') return 'Sem conexão com a internet.';
+    if (code === 'auth/user-disabled')          return 'Esta conta foi desativada.';
+    if (code === 'auth/email-already-in-use')   return 'Este e-mail já está cadastrado.';
+    if (code === 'auth/weak-password')          return 'Senha deve ter no mínimo 6 caracteres.';
+    return err.message || 'Erro desconhecido.';
+  }
+
+  async function doLogin() {
+    const email    = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const btn      = document.getElementById('btn-login');
+
+    document.getElementById('error-msg').classList.add('hidden');
+    if (!email || !password) { showErr('Preencha e-mail e senha.'); return; }
+
+    btn.disabled = true; btn.textContent = 'Verificando...';
+    try {
+      const cred = await auth.signInWithEmailAndPassword(email, password);
+      const uid  = cred.user.uid;
+      const snap = await db.ref('users/' + uid).once('value');
+      const ud   = snap.val();
+
+      if (!ud) {
+        await auth.signOut();
+        showErr('Usuário sem cadastro no sistema. Contate o administrador.');
+        btn.disabled = false; btn.textContent = 'ENTRAR';
+        return;
+      }
+      if (ud.status === 'bloqueado' || ud.status === 'suspenso') {
+        await auth.signOut();
+        showErr('Esta conta está bloqueada. Contate o administrador.');
+        btn.disabled = false; btn.textContent = 'ENTRAR';
+        return;
+      }
+
+      redirecting = true;
+      if (ud.role === 'admin')        window.location.replace('admin/index.html');
+      else if (ud.role === 'empresa') window.location.replace('empresa/index.html');
+      else if (ud.role === 'usuario') window.location.replace('usuario/index.html');
+    } catch (err) {
+      showErr(mapAuthError(err));
+      btn.disabled = false; btn.textContent = 'ENTRAR';
+    }
+  }
+
+  async function doRegister() {
+    const name     = document.getElementById('r-name').value.trim();
+    const email    = document.getElementById('r-email').value.trim();
+    const phone    = document.getElementById('r-phone').value.trim();
+    const password = document.getElementById('r-password').value;
+    const btn      = document.getElementById('btn-register');
+
+    document.getElementById('error-msg').classList.add('hidden');
+    if (!name || !email || !password) { showErr('Preencha nome, e-mail e senha.'); return; }
+    if (password.length < 6) { showErr('Senha deve ter no mínimo 6 caracteres.'); return; }
+
+    btn.disabled = true; btn.textContent = 'Criando conta...';
+    try {
+      const cred = await auth.createUserWithEmailAndPassword(email, password);
+      const uid  = cred.user.uid;
+
+      const profile = {
+        role: 'usuario',
+        status: 'ativo',
+        name,
+        email,
+        createdAt: Date.now(),
+        uniqueCode: generateUniqueCode(),
+        referralCode: generateUniqueCode(),
+      };
+      if (phone) profile.phone = normalizePhone(phone);
+
+      await db.ref('users/' + uid).set(profile);
+      await db.ref('codigosUnicos/' + profile.uniqueCode).set(uid);
+      if (phone) await db.ref('telefones/' + profile.phone).set(uid);
+
+      redirecting = true;
+      window.location.replace('usuario/index.html');
+    } catch (err) {
+      showErr(mapAuthError(err));
+      btn.disabled = false; btn.textContent = 'CRIAR CONTA';
+    }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    if (document.getElementById('login-page').style.display === 'none') return;
+    if (!document.getElementById('form-register').classList.contains('hidden')) doRegister();
+    else doLogin();
+  });
+</script>
+<script src="assets/js/sw-update.js"></script>
+</body>
 </html>

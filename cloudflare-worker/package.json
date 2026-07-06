@@ -1,0 +1,13 @@
+{
+  "name": "local-points-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API sensível do Local Points (pontos, resgates, gamificação) — Cloudflare Worker. Zero dependências: tudo feito com Web Crypto e fetch nativos.",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.36.0"
+  }
+}

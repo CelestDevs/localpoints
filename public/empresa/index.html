@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Local Points — Empresa</title>
+  <link rel="manifest" href="../manifest.json">
+  <meta name="theme-color" content="#16130F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LP Empresa">
+  <link rel="apple-touch-icon" href="../assets/icons/icon-192.png">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="../assets/js/firebase-config.js"></script>
+  <script src="../assets/js/audit.js"></script>
+  <script src="../assets/js/storage.js"></script>
+  <script src="../assets/js/api.js"></script>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading">
+  <div class="loading-logo">Local<span class="logo-points">Points</span></div>
+  <div class="spinner"></div>
+</div>
+
+<div id="app" style="display:none">
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark"><span class="logo-local">Local</span><span class="logo-dot"></span><span class="logo-points">Points</span></div>
+      <span class="logo-sub">Empresa</span>
+    </div>
+    <div class="sidebar-user">
+      <div class="sidebar-user-name" id="empresa-name">Empresa</div>
+      <div class="sidebar-user-role text-teal" id="empresa-role-label">EMPRESA</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Painel</div>
+      <a class="nav-item active" onclick="showPage('dashboard');closeSidebar()" id="nav-dashboard"><span class="nav-icon"><i data-lucide="layout-dashboard"></i></span> Dashboard</a>
+
+      <div class="nav-section-label">Operação</div>
+      <a class="nav-item" onclick="showPage('clientes');closeSidebar()" id="nav-clientes"><span class="nav-icon"><i data-lucide="users"></i></span> Clientes</a>
+      <a class="nav-item" onclick="showPage('pontos');closeSidebar()" id="nav-pontos"><span class="nav-icon"><i data-lucide="circle-dollar-sign"></i></span> Pontos</a>
+      <a class="nav-item" onclick="showPage('promocoes');closeSidebar()" id="nav-promocoes"><span class="nav-icon"><i data-lucide="tag"></i></span> Promoções</a>
+      <a class="nav-item" onclick="showPage('recompensas');closeSidebar()" id="nav-recompensas"><span class="nav-icon"><i data-lucide="gift"></i></span> Recompensas</a>
+      <a class="nav-item" onclick="showPage('resgates');closeSidebar()" id="nav-resgates"><span class="nav-icon"><i data-lucide="ticket-check"></i></span> Resgates</a>
+
+      <div class="nav-section-label">Gestão</div>
+      <a class="nav-item" onclick="showPage('relatorios');closeSidebar()" id="nav-relatorios"><span class="nav-icon"><i data-lucide="bar-chart-3"></i></span> Relatórios</a>
+      <a class="nav-item" onclick="showPage('funcionarios');closeSidebar()" id="nav-funcionarios"><span class="nav-icon"><i data-lucide="user-cog"></i></span> Funcionários</a>
+      <a class="nav-item" onclick="showPage('config');closeSidebar()" id="nav-config"><span class="nav-icon"><i data-lucide="settings"></i></span> Configurações</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="doLogout()"><i data-lucide="log-out"></i> Sair do Sistema</button>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="mobile-header">
+      <button class="hamburger" onclick="openSidebar()"><span></span><span></span><span></span></button>
+      <div class="mobile-logo"><span class="logo-local">Local</span><span class="logo-dot"></span><span class="logo-points">Points</span></div>
+      <div style="width:36px"></div>
+    </div>
+    <div class="topbar">
+      <div class="topbar-title" id="page-title">Dashboard</div>
+      <div class="status-dot">EMPRESA</div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- BLOQUEIO — empresa não ativa -->
+      <div id="page-blocked" class="hidden">
+        <div class="card">
+          <div class="alert alert-warning" id="blocked-msg">Sua empresa está com o cadastro pendente de aprovação.</div>
+          <p class="text-secondary">Assim que o administrador da plataforma aprovar o cadastro, todos os módulos ficam disponíveis aqui.</p>
+        </div>
+      </div>
+
+      <!-- DASHBOARD -->
+      <div id="page-dashboard" class="hidden">
+        <div class="stats-grid">
+          <div class="stat-card accent"><div class="stat-label">Status</div><div class="stat-value" id="ds-status" style="font-size:16px">—</div></div>
+          <div class="stat-card teal"><div class="stat-label">Categoria</div><div class="stat-value" id="ds-category" style="font-size:16px">—</div></div>
+          <div class="stat-card violet"><div class="stat-label">Cashback</div><div class="stat-value" id="ds-cashback" style="font-size:16px">Desativado</div></div>
+          <div class="stat-card orange"><div class="stat-label">Plano</div><div class="stat-value" id="ds-plano" style="font-size:16px">Sem plano</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="rocket"></i> Bem-vindo(a) ao Local Points</div></div>
+          <p class="text-secondary" style="line-height:1.7">
+            Sua empresa já está com acesso ao painel. Complete seu perfil em
+            <strong>Configurações</strong> — é o que os clientes veem no catálogo.
+            <strong>Clientes</strong>, <strong>Pontos</strong>, <strong>Recompensas</strong>,
+            <strong>Promoções</strong> e <strong>Funcionários</strong> já funcionam de ponta
+            a ponta. Confira também os <strong>Relatórios</strong> do seu programa de fidelidade.
+          </p>
+        </div>
+      </div>
+
+      <!-- CLIENTES -->
+      <div id="page-clientes" class="hidden">
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="search"></i> Buscar cliente</div></div>
+          <div class="d-flex gap-8" style="align-items:flex-start">
+            <input type="text" id="cliente-busca" class="form-control" placeholder="Código único (8 caracteres) ou telefone">
+            <button class="btn btn-primary" onclick="buscarCliente()" style="flex-shrink:0"><i data-lucide="search"></i> Buscar</button>
+          </div>
+          <div id="cliente-busca-error" class="alert alert-danger hidden mt-12"></div>
+        </div>
+
+        <div id="cliente-resultado" class="hidden">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><i data-lucide="user"></i> <span id="cliente-nome">—</span></div>
+              <div class="points-chip"><span class="logo-dot"></span> <span id="cliente-saldo">0</span> pts nesta empresa</div>
+            </div>
+            <div class="entity-sub mb-12">Telefone: <span id="cliente-telefone">—</span> · Código: <span id="cliente-codigo" class="font-m"></span></div>
+            <button class="btn btn-primary btn-sm" onclick="abrirLancamentoModal()"><i data-lucide="plus"></i> Lançar Pontos</button>
+          </div>
+
+          <div class="card hidden" id="cliente-cashback-card">
+            <div class="card-header">
+              <div class="card-title"><i data-lucide="circle-dollar-sign"></i> Cashback</div>
+              <div class="points-chip" style="background:var(--teal-dim);color:var(--teal)"><span id="cliente-cashback-saldo">R$ 0,00</span></div>
+            </div>
+            <div class="d-flex gap-8">
+              <input type="number" step="0.01" min="0" id="cliente-cashback-valor" class="form-control" placeholder="Valor a usar (R$)">
+              <button class="btn btn-teal btn-sm" onclick="usarCashbackCliente()" style="flex-shrink:0">Usar</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><div class="card-title"><i data-lucide="gift"></i> Resgatar no balcão</div></div>
+            <div id="cliente-recompensas-list"><div class="empty-state"><div class="empty-sub">Nenhuma recompensa ativa cadastrada.</div></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PONTOS -->
+      <div id="page-pontos" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i data-lucide="circle-dollar-sign"></i> Lançamentos</div>
+            <button class="btn btn-primary btn-sm" onclick="abrirLancamentoModal()"><i data-lucide="plus"></i> Novo Lançamento</button>
+          </div>
+          <p class="text-secondary text-sm mb-12">Para lançar pontos, primeiro busque o cliente em <strong>Clientes</strong> — ou clique em "Novo Lançamento" para buscar aqui mesmo.</p>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Data</th><th>Cliente</th><th>Tipo</th><th>Pontos</th><th>Motivo</th><th></th></tr></thead>
+              <tbody id="lancamentos-tbody"><tr><td colspan="6" class="text-center text-muted" style="padding:24px">Carregando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECOMPENSAS -->
+      <div id="page-recompensas" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i data-lucide="gift"></i> Recompensas</div>
+            <button class="btn btn-primary btn-sm" onclick="openNewRecompensaModal()"><i data-lucide="plus"></i> Nova Recompensa</button>
+          </div>
+          <div id="recompensas-list"><div class="empty-state"><div class="empty-title">Carregando...</div></div></div>
+        </div>
+      </div>
+
+      <!-- RESGATES -->
+      <div id="page-resgates" class="hidden">
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="clock"></i> Pendentes</div></div>
+          <div id="resgates-pendentes-list"><div class="empty-state"><div class="empty-sub">Nenhum pedido pendente.</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="history"></i> Histórico</div></div>
+          <div id="resgates-historico-list"><div class="empty-state"><div class="empty-sub">Nenhum resgate ainda.</div></div></div>
+        </div>
+      </div>
+
+      <!-- PROMOÇÕES -->
+      <div id="page-promocoes" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i data-lucide="tag"></i> Promoções</div>
+            <button class="btn btn-primary btn-sm" onclick="openNewPromocaoModal()"><i data-lucide="plus"></i> Nova Promoção</button>
+          </div>
+          <p class="text-secondary text-sm mb-12">Promoções ativas de pontos em dobro/triplo são aplicadas automaticamente nos lançamentos automáticos, dentro do período configurado.</p>
+          <div id="promocoes-list"><div class="empty-state"><div class="empty-title">Carregando...</div></div></div>
+        </div>
+      </div>
+
+      <!-- FUNCIONÁRIOS -->
+      <div id="page-funcionarios" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i data-lucide="user-cog"></i> Funcionários</div>
+            <button class="btn btn-primary btn-sm" onclick="openNewFuncionarioModal()"><i data-lucide="plus"></i> Novo Funcionário</button>
+          </div>
+          <div id="funcionarios-list"><div class="empty-state"><div class="empty-title">Carregando...</div></div></div>
+        </div>
+      </div>
+
+      <!-- RELATÓRIOS -->
+      <div id="page-relatorios" class="hidden">
+        <div class="stats-grid">
+          <div class="stat-card accent"><div class="stat-label">Pontos Emitidos</div><div class="stat-value" id="rel-pontos-emitidos">0</div></div>
+          <div class="stat-card teal"><div class="stat-label">Pontos Resgatados</div><div class="stat-value" id="rel-pontos-resgatados">0</div></div>
+          <div class="stat-card orange"><div class="stat-label">Lançamentos</div><div class="stat-value" id="rel-total-lancamentos">0</div></div>
+          <div class="stat-card violet"><div class="stat-label">Resgates Entregues</div><div class="stat-value" id="rel-total-resgates">0</div></div>
+        </div>
+
+        <div id="rel-avancado-bloqueado" class="card hidden">
+          <div class="empty-state">
+            <div class="empty-icon"><i data-lucide="lock"></i></div>
+            <div class="empty-title">Relatórios avançados não incluídos no seu plano</div>
+            <div class="empty-sub">Clientes mais ativos, faturamento gerado e evolução mensal. Fale com o administrador da plataforma para fazer upgrade.</div>
+          </div>
+        </div>
+
+        <div id="rel-avancado-conteudo" class="hidden">
+          <div class="card">
+            <div class="card-header"><div class="card-title"><i data-lucide="banknote"></i> Faturamento gerado pelo programa</div></div>
+            <p class="text-secondary text-sm mb-8">Soma do valor de compra dos lançamentos automáticos/promocionais (lançamentos manuais não têm valor associado).</p>
+            <div class="stat-value" id="rel-faturamento" style="font-size:26px">R$ 0,00</div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><div class="card-title"><i data-lucide="trending-up"></i> Evolução mensal — pontos emitidos</div></div>
+            <div id="rel-evolucao-chart"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><div class="card-title"><i data-lucide="users"></i> Clientes mais ativos</div></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Cliente</th><th>Lançamentos</th><th>Pontos recebidos</th></tr></thead>
+                <tbody id="rel-clientes-ativos-tbody"><tr><td colspan="3" class="text-center text-muted" style="padding:24px">—</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header"><div class="card-title"><i data-lucide="gift"></i> Clientes que mais resgataram</div></div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Cliente</th><th>Resgates</th><th>Pontos gastos</th></tr></thead>
+                <tbody id="rel-clientes-resgates-tbody"><tr><td colspan="3" class="text-center text-muted" style="padding:24px">—</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MÓDULO EM CONSTRUÇÃO -->
+      <div id="page-soon" class="hidden">
+        <div class="card">
+          <div class="empty-state">
+            <div class="empty-icon"><i data-lucide="hammer" id="soon-icon"></i></div>
+            <div class="empty-title" id="soon-title">Módulo em construção</div>
+            <div class="empty-sub">Chega numa próxima fase do desenvolvimento.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONFIGURAÇÕES -->
+      <div id="page-config" class="hidden">
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="store"></i> Perfil da Empresa</div></div>
+          <div id="config-error" class="alert alert-danger hidden"></div>
+
+          <div class="form-group">
+            <label class="form-label">Logo</label>
+            <div class="d-flex gap-12 align-center">
+              <img id="cfg-logo-preview" src="" alt="" style="width:56px;height:56px;border-radius:12px;object-fit:cover;background:var(--bg-3);display:none">
+              <input type="file" id="cfg-logo-file" accept="image/*" class="form-control">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Banner</label>
+            <input type="file" id="cfg-banner-file" accept="image/*" class="form-control">
+          </div>
+
+          <div class="form-group"><label class="form-label">Descrição</label><input type="text" id="cfg-description" class="form-control"></div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Categoria</label>
+              <select id="cfg-category" class="form-control">
+                <option value="alimentacao">Alimentação</option>
+                <option value="vestuario">Vestuário</option>
+                <option value="beleza">Beleza e Estética</option>
+                <option value="saude">Saúde</option>
+                <option value="servicos">Serviços</option>
+                <option value="outros">Outros</option>
+              </select>
+            </div>
+            <div class="form-group"><label class="form-label">Telefone</label><input type="tel" id="cfg-phone" class="form-control"></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">E-mail de contato</label><input type="email" id="cfg-email" class="form-control"></div>
+            <div class="form-group"><label class="form-label">Cidade / UF</label>
+              <div class="d-flex gap-8">
+                <input type="text" id="cfg-city" class="form-control">
+                <input type="text" id="cfg-state" class="form-control" maxlength="2" style="max-width:70px;text-transform:uppercase">
+              </div>
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="saveEmpresaProfile()">Salvar Perfil</button>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="award"></i> Programa de Fidelidade</div></div>
+          <div class="form-row">
+            <div class="form-group"><label class="form-label">Pontos por R$ 1,00</label><input type="number" step="0.1" min="0" id="cfg-points-rate" class="form-control"></div>
+            <div class="form-group"><label class="form-label">Valor mínimo p/ pontuar (R$)</label><input type="number" step="0.01" min="0" id="cfg-min-value" class="form-control"></div>
+          </div>
+          <div class="form-group"><label class="form-label">Validade dos pontos (dias)</label><input type="number" min="0" id="cfg-points-validity" class="form-control"></div>
+          <div class="form-group">
+            <label class="form-label d-flex align-center gap-6"><input type="checkbox" id="cfg-cashback-enabled" style="width:16px;height:16px"> Ativar cashback</label>
+            <div class="form-hint hidden" id="cfg-cashback-hint">Seu plano atual não inclui cashback. Fale com o administrador da plataforma para fazer upgrade.</div>
+          </div>
+          <div class="form-group"><label class="form-label">Percentual de cashback (%)</label><input type="number" step="0.1" min="0" max="100" id="cfg-cashback-percent" class="form-control"></div>
+          <button class="btn btn-primary" onclick="saveLoyaltyRules()">Salvar Regras</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- MODAL — Lançamento de pontos -->
+<div class="modal-overlay" id="modal-lancamento">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title"><i data-lucide="circle-dollar-sign"></i> Lançar Pontos</div>
+      <button class="modal-close" onclick="closeModal('modal-lancamento')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="lancamento-error" class="alert alert-danger hidden"></div>
+
+      <div id="lancamento-busca-wrap">
+        <div class="form-group">
+          <label class="form-label">Cliente (código ou telefone)</label>
+          <div class="d-flex gap-8">
+            <input type="text" id="lanc-busca" class="form-control" placeholder="Código único ou telefone">
+            <button class="btn btn-ghost" onclick="buscarClienteParaLancamento()" style="flex-shrink:0"><i data-lucide="search"></i></button>
+          </div>
+        </div>
+      </div>
+      <div id="lancamento-cliente-info" class="alert alert-info hidden"></div>
+
+      <div class="form-group">
+        <label class="form-label">Tipo de lançamento</label>
+        <select id="lanc-tipo" class="form-control" onchange="onLancTipoChange()">
+          <option value="automatico">Automático (por valor de compra)</option>
+          <option value="manual">Manual (pontos diretos)</option>
+        </select>
+      </div>
+      <div class="form-group" id="lanc-valor-wrap">
+        <label class="form-label">Valor da compra (R$)</label>
+        <input type="number" step="0.01" min="0" id="lanc-valor" class="form-control" oninput="calcularPontosAutomatico()">
+        <div class="form-hint" id="lanc-calc-hint"></div>
+      </div>
+      <div class="form-group hidden" id="lanc-pontos-wrap">
+        <label class="form-label">Pontos</label>
+        <input type="number" step="1" id="lanc-pontos" class="form-control">
+      </div>
+      <div class="form-group"><label class="form-label">Motivo / observação</label><input type="text" id="lanc-motivo" class="form-control" placeholder="Ex: Compra no balcão"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-lancamento')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-lancamento" onclick="salvarLancamento()">Lançar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL — Recompensa (criar/editar) -->
+<div class="modal-overlay" id="modal-recompensa">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="recompensa-modal-title"><i data-lucide="gift"></i> Nova Recompensa</div>
+      <button class="modal-close" onclick="closeModal('modal-recompensa')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="recompensa-modal-error" class="alert alert-danger hidden"></div>
+      <input type="hidden" id="rec-id">
+      <div class="form-group">
+        <label class="form-label">Imagem</label>
+        <div class="d-flex gap-12 align-center">
+          <img id="rec-imagem-preview" src="" alt="" style="width:56px;height:56px;border-radius:12px;object-fit:cover;background:var(--bg-3);display:none">
+          <input type="file" id="rec-imagem-file" accept="image/*" class="form-control">
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Nome</label><input type="text" id="rec-nome" class="form-control"></div>
+      <div class="form-group"><label class="form-label">Descrição</label><input type="text" id="rec-descricao" class="form-control"></div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tipo</label>
+          <select id="rec-tipo" class="form-control">
+            <option value="produto">Produto</option>
+            <option value="desconto">Desconto</option>
+            <option value="brinde">Brinde</option>
+            <option value="servico">Serviço</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Valor em pontos</label><input type="number" min="0" id="rec-pontos" class="form-control"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Quantidade disponível</label><input type="number" min="0" id="rec-quantidade" class="form-control"></div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <select id="rec-status" class="form-control">
+            <option value="ativo">Ativo</option>
+            <option value="inativo">Inativo</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-recompensa')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-recompensa" onclick="saveRecompensa()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<!-- MODAL — Promoção -->
+<div class="modal-overlay" id="modal-promocao">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title"><i data-lucide="tag"></i> Nova Promoção</div>
+      <button class="modal-close" onclick="closeModal('modal-promocao')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="promocao-modal-error" class="alert alert-danger hidden"></div>
+      <input type="hidden" id="promo-id">
+      <div class="form-group"><label class="form-label">Título</label><input type="text" id="promo-titulo" class="form-control" placeholder="Ex: Fim de semana em dobro"></div>
+      <div class="form-group">
+        <label class="form-label">Tipo</label>
+        <select id="promo-tipo" class="form-control">
+          <option value="pontos_dobro">Pontos em dobro (x2)</option>
+          <option value="pontos_triplo">Pontos triplicados (x3)</option>
+          <option value="campanha">Campanha (sem multiplicador automático)</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Início</label><input type="date" id="promo-inicio" class="form-control"></div>
+        <div class="form-group"><label class="form-label">Fim</label><input type="date" id="promo-fim" class="form-control"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label d-flex align-center gap-6"><input type="checkbox" id="promo-ativa" style="width:16px;height:16px" checked> Ativa</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-promocao')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-promocao" onclick="savePromocao()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL — Funcionário -->
+<div class="modal-overlay" id="modal-funcionario">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="funcionario-modal-title"><i data-lucide="user-cog"></i> Novo Funcionário</div>
+      <button class="modal-close" onclick="closeModal('modal-funcionario')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="funcionario-modal-error" class="alert alert-danger hidden"></div>
+      <input type="hidden" id="func-uid">
+      <div class="form-group"><label class="form-label">Nome</label><input type="text" id="func-nome" class="form-control"></div>
+      <div class="form-group" id="func-email-wrap"><label class="form-label">E-mail</label><input type="email" id="func-email" class="form-control"></div>
+      <div class="form-group" id="func-senha-wrap"><label class="form-label">Senha inicial</label><input type="password" id="func-senha" class="form-control" placeholder="Mínimo 6 caracteres"></div>
+
+      <div class="divider"></div>
+      <div class="section-title">Permissões</div>
+      <div class="form-group"><label class="form-label d-flex align-center gap-6"><input type="checkbox" id="func-perm-lancar" style="width:16px;height:16px"> Lançar pontos</label></div>
+      <div class="form-group"><label class="form-label d-flex align-center gap-6"><input type="checkbox" id="func-perm-resgatar" style="width:16px;height:16px"> Resgatar recompensas</label></div>
+      <div class="form-group"><label class="form-label d-flex align-center gap-6"><input type="checkbox" id="func-perm-clientes" style="width:16px;height:16px"> Gerenciar clientes</label></div>
+      <div class="form-group"><label class="form-label d-flex align-center gap-6"><input type="checkbox" id="func-perm-recompensas" style="width:16px;height:16px"> Gerenciar recompensas</label></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-funcionario')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-funcionario" onclick="saveFuncionario()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentUser = null;
+let currentEmpresa = null;
+let empresaId = null;
+
+auth.onAuthStateChanged(async user => {
+  if (!user) { window.location.replace('../index.html'); return; }
+  try {
+    const snap = await db.ref('users/' + user.uid).once('value');
+    const ud = snap.val();
+    if (!ud || ud.role !== 'empresa') { window.location.replace('../index.html'); return; }
+
+    currentUser = { uid: user.uid, ...ud };
+    empresaId = ud.empresaId;
+    window._auditActor = { uid: user.uid, name: ud.name, email: ud.email, role: 'empresa' };
+
+    document.getElementById('empresa-name').textContent = ud.name || ud.email;
+    document.getElementById('empresa-role-label').textContent = ud.isOwner ? 'RESPONSÁVEL' : 'FUNCIONÁRIO';
+    if (!ud.isOwner) {
+      document.getElementById('nav-config').classList.add('hidden');
+      document.getElementById('nav-funcionarios').classList.add('hidden');
+      document.getElementById('nav-promocoes').classList.add('hidden');
+    }
+
+    await loadEmpresa();
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    renderIcons();
+  } catch (e) {
+    window.location.replace('../index.html');
+  }
+});
+
+function renderIcons() { if (window.lucide) lucide.createIcons(); }
+
+async function doLogout() {
+  if (window.ensureSWReady) await ensureSWReady();
+  await auth.signOut();
+  window.location.replace('../index.html');
+}
+
+function openSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').classList.add('show'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('show'); }
+
+function showToast(msg, type = 'info') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  t.onclick = () => t.remove();
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 4500);
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); renderIcons(); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+const PAGE_TITLES = { dashboard: 'Dashboard', clientes: 'Clientes', pontos: 'Pontos', recompensas: 'Recompensas', resgates: 'Resgates', promocoes: 'Promoções', funcionarios: 'Funcionários', relatorios: 'Relatórios', config: 'Configurações' };
+
+function showPage(id) {
+  ['dashboard', 'clientes', 'pontos', 'recompensas', 'resgates', 'promocoes', 'funcionarios', 'relatorios', 'soon', 'config'].forEach(p => document.getElementById('page-' + p).classList.toggle('hidden', p !== id));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navEl = document.getElementById('nav-' + id);
+  if (navEl) navEl.classList.add('active');
+  document.getElementById('page-title').textContent = PAGE_TITLES[id] || id;
+  if (id === 'config') fillConfigForm();
+  if (id === 'pontos') loadLancamentos();
+  if (id === 'recompensas') loadRecompensas();
+  if (id === 'resgates') loadResgates();
+  if (id === 'promocoes') loadPromocoes();
+  if (id === 'funcionarios') loadFuncionarios();
+  if (id === 'relatorios') loadRelatorios();
+}
+
+function showSoon(label, icon) {
+  showPage('soon');
+  document.getElementById('page-title').textContent = label;
+  document.getElementById('soon-title').textContent = label + ' — em construção';
+  document.getElementById('soon-icon').setAttribute('data-lucide', icon || 'hammer');
+  renderIcons();
+}
+
+let currentPlano = null; // { nome, limites, features } — null se a empresa não tem plano
+
+async function loadEmpresa() {
+  const snap = await db.ref('empresas/' + empresaId).once('value');
+  currentEmpresa = snap.val() || {};
+
+  if (currentEmpresa.status !== 'ativo') {
+    document.getElementById('page-blocked').classList.remove('hidden');
+    const msgs = {
+      pendente:  'Sua empresa está com o cadastro pendente de aprovação.',
+      suspenso:  'Sua empresa está suspensa. Contate o administrador da plataforma.',
+      cancelado: 'Sua empresa está com o cadastro cancelado. Contate o administrador.'
+    };
+    document.getElementById('blocked-msg').textContent = msgs[currentEmpresa.status] || 'Sua empresa não está ativa no momento.';
+    document.querySelectorAll('.nav-item').forEach(n => n.style.pointerEvents = 'none');
+    return;
+  }
+
+  if (currentEmpresa.planId) {
+    try {
+      const planoSnap = await db.ref('planos/' + currentEmpresa.planId).once('value');
+      currentPlano = planoSnap.val();
+    } catch (e) { currentPlano = null; }
+  } else {
+    currentPlano = null;
+  }
+  aplicarGatingDoPlano();
+
+  document.getElementById('ds-status').textContent = STATUS_LABELS[currentEmpresa.status] || currentEmpresa.status;
+  document.getElementById('ds-category').textContent = currentEmpresa.category || '—';
+  document.getElementById('ds-cashback').textContent = currentEmpresa.cashback?.enabled ? currentEmpresa.cashback.percent + '%' : 'Desativado';
+  document.getElementById('ds-plano').textContent = currentPlano ? currentPlano.nome : 'Sem plano';
+  document.getElementById('page-dashboard').classList.remove('hidden');
+}
+
+// Sem plano atribuído = sem módulos extras liberados (mais restritivo por padrão)
+function planoPermite(feature) {
+  return !!currentPlano?.features?.[feature];
+}
+
+function planoLimite(chave) {
+  const valor = currentPlano?.limites?.[chave];
+  return valor && valor > 0 ? valor : Infinity; // 0 ou ausente = ilimitado
+}
+
+function aplicarGatingDoPlano() {
+  const navPromo = document.getElementById('nav-promocoes');
+  if (navPromo && currentUser.isOwner) {
+    navPromo.classList.toggle('hidden', !planoPermite('promocoes'));
+  }
+  const cbCheckbox = document.getElementById('cfg-cashback-enabled');
+  if (cbCheckbox) {
+    const permitido = planoPermite('cashback');
+    cbCheckbox.disabled = !permitido;
+    document.getElementById('cfg-cashback-hint').classList.toggle('hidden', permitido);
+  }
+}
+
+function fillConfigForm() {
+  const e = currentEmpresa || {};
+  document.getElementById('cfg-description').value = e.description || '';
+  document.getElementById('cfg-category').value = e.category || 'outros';
+  document.getElementById('cfg-phone').value = e.phone || '';
+  document.getElementById('cfg-email').value = e.email || '';
+  document.getElementById('cfg-city').value = e.address?.city || '';
+  document.getElementById('cfg-state').value = e.address?.state || '';
+
+  const rules = e.loyaltyRules || {};
+  document.getElementById('cfg-points-rate').value = rules.pointsPerCurrency ?? 1;
+  document.getElementById('cfg-min-value').value = rules.minValue ?? 0;
+  document.getElementById('cfg-points-validity').value = rules.pointsValidityDays ?? 365;
+
+  const cb = e.cashback || {};
+  document.getElementById('cfg-cashback-enabled').checked = !!cb.enabled;
+  document.getElementById('cfg-cashback-percent').value = cb.percent ?? 0;
+
+  const preview = document.getElementById('cfg-logo-preview');
+  if (e.logoUrl) { preview.src = e.logoUrl; preview.style.display = 'block'; }
+  else { preview.style.display = 'none'; }
+}
+
+async function saveEmpresaProfile() {
+  const errEl = document.getElementById('config-error');
+  errEl.classList.add('hidden');
+  try {
+    const updates = {
+      description: document.getElementById('cfg-description').value.trim(),
+      category: document.getElementById('cfg-category').value,
+      phone: document.getElementById('cfg-phone').value.trim(),
+      email: document.getElementById('cfg-email').value.trim(),
+      address: {
+        city: document.getElementById('cfg-city').value.trim(),
+        state: document.getElementById('cfg-state').value.trim().toUpperCase()
+      }
+    };
+
+    const logoFile = document.getElementById('cfg-logo-file').files[0];
+    if (logoFile) {
+      showToast('Enviando logo...', 'info');
+      updates.logoUrl = await uploadImage(logoFile);
+    }
+    const bannerFile = document.getElementById('cfg-banner-file').files[0];
+    if (bannerFile) {
+      showToast('Enviando banner...', 'info');
+      updates.bannerUrl = await uploadImage(bannerFile);
+    }
+
+    for (const [key, val] of Object.entries(updates)) {
+      await db.ref('empresas/' + empresaId + '/' + key).set(val);
+    }
+
+    Object.assign(currentEmpresa, updates);
+    await auditLog('empresa.perfil', { type: 'empresa', id: empresaId, label: currentEmpresa.name }, {});
+    showToast('Perfil atualizado.', 'success');
+    fillConfigForm();
+  } catch (e) {
+    errEl.textContent = '⚠ ' + e.message;
+    errEl.classList.remove('hidden');
+  }
+}
+
+async function saveLoyaltyRules() {
+  try {
+    const loyaltyRules = {
+      pointsPerCurrency: parseFloat(document.getElementById('cfg-points-rate').value) || 0,
+      minValue: parseFloat(document.getElementById('cfg-min-value').value) || 0,
+      pointsValidityDays: parseInt(document.getElementById('cfg-points-validity').value) || 0
+    };
+    const cashback = {
+      enabled: document.getElementById('cfg-cashback-enabled').checked,
+      percent: parseFloat(document.getElementById('cfg-cashback-percent').value) || 0
+    };
+    await db.ref('empresas/' + empresaId + '/loyaltyRules').set(loyaltyRules);
+    await db.ref('empresas/' + empresaId + '/cashback').set(cashback);
+    currentEmpresa.loyaltyRules = loyaltyRules;
+    currentEmpresa.cashback = cashback;
+    await auditLog('empresa.regras', { type: 'empresa', id: empresaId, label: currentEmpresa.name }, { loyaltyRules, cashback });
+    showToast('Regras salvas.', 'success');
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// CLIENTES — busca por código único ou telefone
+// ══════════════════════════════════════════════════════
+let clienteAtual = null; // { uid, name, phone, uniqueCode, saldo }
+
+async function resolverClientePorTermo(termo) {
+  const t = termo.trim();
+  if (!t) throw new Error('Digite um código ou telefone.');
+
+  let uid = null;
+  if (/^[A-Za-z0-9]{6,10}$/.test(t) && !/^\d+$/.test(t)) {
+    // parece código único (tem letras)
+    const snap = await db.ref('codigosUnicos/' + t.toUpperCase()).once('value');
+    uid = snap.val();
+  }
+  if (!uid) {
+    // tenta telefone (só dígitos)
+    const normalized = normalizePhone(t);
+    if (normalized.length >= 8) {
+      const snap = await db.ref('telefones/' + normalized).once('value');
+      uid = snap.val();
+    }
+  }
+  if (!uid) {
+    // última tentativa: código único em maiúsculas exato
+    const snap = await db.ref('codigosUnicos/' + t.toUpperCase()).once('value');
+    uid = snap.val();
+  }
+  if (!uid) throw new Error('Cliente não encontrado. Confira o código ou telefone.');
+
+  const userSnap = await db.ref('users/' + uid).once('value');
+  const user = userSnap.val();
+  if (!user || user.role !== 'usuario') throw new Error('Este código não pertence a um cliente válido.');
+
+  const saldoSnap = await db.ref('pontos/saldo/' + uid + '/' + empresaId).once('value');
+  const cashbackSnap = await db.ref('cashback/saldo/' + uid + '/' + empresaId).once('value');
+  return { uid, name: user.name, phone: user.phone, uniqueCode: user.uniqueCode, saldo: saldoSnap.val() || 0, cashbackSaldo: cashbackSnap.val() || 0 };
+}
+
+async function buscarCliente() {
+  const errEl = document.getElementById('cliente-busca-error');
+  errEl.classList.add('hidden');
+  document.getElementById('cliente-resultado').classList.add('hidden');
+  try {
+    const termo = document.getElementById('cliente-busca').value;
+    clienteAtual = await resolverClientePorTermo(termo);
+    document.getElementById('cliente-nome').textContent = clienteAtual.name || '—';
+    document.getElementById('cliente-telefone').textContent = clienteAtual.phone || '—';
+    document.getElementById('cliente-codigo').textContent = clienteAtual.uniqueCode || '—';
+    document.getElementById('cliente-saldo').textContent = clienteAtual.saldo;
+
+    const cashbackAtivo = !!currentEmpresa.cashback?.enabled;
+    document.getElementById('cliente-cashback-card').classList.toggle('hidden', !cashbackAtivo);
+    if (cashbackAtivo) {
+      document.getElementById('cliente-cashback-saldo').textContent = formatCurrency(clienteAtual.cashbackSaldo);
+      document.getElementById('cliente-cashback-valor').value = '';
+    }
+
+    document.getElementById('cliente-resultado').classList.remove('hidden');
+    await renderRecompensasParaCliente();
+    renderIcons();
+  } catch (e) {
+    errEl.textContent = '⚠ ' + e.message;
+    errEl.classList.remove('hidden');
+  }
+}
+
+async function usarCashbackCliente() {
+  if (!clienteAtual) return;
+  const valor = parseFloat(document.getElementById('cliente-cashback-valor').value);
+  if (!valor || valor <= 0) { showToast('Informe um valor válido.', 'error'); return; }
+  if (valor > clienteAtual.cashbackSaldo) { showToast('Valor maior que o saldo disponível.', 'error'); return; }
+  if (!confirm(`Confirma usar ${formatCurrency(valor)} de cashback para ${clienteAtual.name}?`)) return;
+
+  try {
+    const resultado = await callApi('/api/usar-cashback', { empresaId, clienteUid: clienteAtual.uid, valor });
+    await auditLog('cashback.usar', { type: 'usuario', id: clienteAtual.uid, label: clienteAtual.name }, { valor, empresaId });
+    clienteAtual.cashbackSaldo = resultado.novoSaldo;
+    document.getElementById('cliente-cashback-saldo').textContent = formatCurrency(clienteAtual.cashbackSaldo);
+    document.getElementById('cliente-cashback-valor').value = '';
+    showToast('Cashback aplicado.', 'success');
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+async function renderRecompensasParaCliente() {
+  const el = document.getElementById('cliente-recompensas-list');
+  const snap = await db.ref('recompensas/' + empresaId).once('value');
+  const all = snap.val() || {};
+  const ativas = Object.entries(all).filter(([, r]) => r.status === 'ativo' && (r.quantidadeDisponivel ?? 0) > 0);
+  if (!ativas.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-sub">Nenhuma recompensa ativa cadastrada.</div></div>';
+    return;
+  }
+  el.innerHTML = ativas.map(([id, r]) => `
+    <div class="entity-card ${clienteAtual.saldo >= r.valorPontos ? 'ativo' : 'pendente'}">
+      <div>
+        <div class="entity-name">${esc(r.nome)} <span class="badge badge-accent">${formatPoints(r.valorPontos)}</span></div>
+        <div class="entity-sub">${esc(r.descricao || '')} · ${r.quantidadeDisponivel} disponível(is)</div>
+      </div>
+      <div class="entity-actions">
+        <button class="btn btn-primary btn-sm" ${clienteAtual.saldo < r.valorPontos ? 'disabled' : ''} onclick="resgatarNoBalcao('${id}')"><i data-lucide="gift"></i> Resgatar</button>
+      </div>
+    </div>`).join('');
+  renderIcons();
+}
+
+// ══════════════════════════════════════════════════════
+// PONTOS — lançamento manual/automático, estorno, histórico
+// ══════════════════════════════════════════════════════
+let lancamentoCliente = null; // cliente escolhido dentro do modal de lançamento
+
+function abrirLancamentoModal() {
+  document.getElementById('lancamento-error').classList.add('hidden');
+  document.getElementById('lanc-valor').value = '';
+  document.getElementById('lanc-pontos').value = '';
+  document.getElementById('lanc-motivo').value = '';
+  document.getElementById('lanc-tipo').value = 'automatico';
+  onLancTipoChange();
+
+  if (clienteAtual) {
+    lancamentoCliente = clienteAtual;
+    document.getElementById('lancamento-busca-wrap').classList.add('hidden');
+    document.getElementById('lancamento-cliente-info').classList.remove('hidden');
+    document.getElementById('lancamento-cliente-info').textContent = `Cliente: ${lancamentoCliente.name} · Saldo atual: ${lancamentoCliente.saldo} pts`;
+  } else {
+    lancamentoCliente = null;
+    document.getElementById('lancamento-busca-wrap').classList.remove('hidden');
+    document.getElementById('lancamento-cliente-info').classList.add('hidden');
+    document.getElementById('lanc-busca').value = '';
+  }
+  openModal('modal-lancamento');
+}
+
+async function buscarClienteParaLancamento() {
+  const errEl = document.getElementById('lancamento-error');
+  errEl.classList.add('hidden');
+  try {
+    const termo = document.getElementById('lanc-busca').value;
+    lancamentoCliente = await resolverClientePorTermo(termo);
+    document.getElementById('lancamento-cliente-info').classList.remove('hidden');
+    document.getElementById('lancamento-cliente-info').textContent = `Cliente: ${lancamentoCliente.name} · Saldo atual: ${lancamentoCliente.saldo} pts`;
+    calcularPontosAutomatico();
+  } catch (e) {
+    errEl.textContent = '⚠ ' + e.message;
+    errEl.classList.remove('hidden');
+  }
+}
+
+function onLancTipoChange() {
+  const manual = document.getElementById('lanc-tipo').value === 'manual';
+  document.getElementById('lanc-valor-wrap').classList.toggle('hidden', manual);
+  document.getElementById('lanc-pontos-wrap').classList.toggle('hidden', !manual);
+}
+
+function calcularPontosAutomatico() {
+  const rules = currentEmpresa.loyaltyRules || { pointsPerCurrency: 1, minValue: 0 };
+  const valor = parseFloat(document.getElementById('lanc-valor').value) || 0;
+  const hint = document.getElementById('lanc-calc-hint');
+  if (valor < (rules.minValue || 0)) {
+    hint.textContent = `Valor mínimo para pontuar: ${formatCurrency(rules.minValue || 0)}`;
+    return;
+  }
+  getMultiplicadorPromocaoAtiva().then(({ multiplicador, titulo }) => {
+    const pontos = Math.floor(valor * (rules.pointsPerCurrency || 0) * multiplicador);
+    hint.textContent = multiplicador > 1
+      ? `= ${pontos} pontos (${rules.pointsPerCurrency} pts/R$ × ${multiplicador} — promoção "${titulo}" ativa!)`
+      : `= ${pontos} pontos (${rules.pointsPerCurrency} pts por R$ 1,00)`;
+  });
+}
+
+async function getMultiplicadorPromocaoAtiva() {
+  try {
+    const snap = await db.ref('promocoes/' + empresaId).once('value');
+    const hoje = new Date().toISOString().slice(0, 10);
+    const promos = Object.values(snap.val() || {});
+    const ativa = promos.find(p => p.ativo && p.dataInicio <= hoje && hoje <= p.dataFim && (p.tipo === 'pontos_dobro' || p.tipo === 'pontos_triplo'));
+    if (!ativa) return { multiplicador: 1, titulo: null };
+    return { multiplicador: ativa.tipo === 'pontos_triplo' ? 3 : 2, titulo: ativa.titulo };
+  } catch (e) {
+    return { multiplicador: 1, titulo: null };
+  }
+}
+
+async function salvarLancamento() {
+  const errEl = document.getElementById('lancamento-error');
+  errEl.classList.add('hidden');
+  const btn = document.getElementById('btn-save-lancamento');
+
+  try {
+    if (!lancamentoCliente) throw new Error('Busque um cliente antes de lançar pontos.');
+    const tipo = document.getElementById('lanc-tipo').value;
+    const motivo = document.getElementById('lanc-motivo').value.trim();
+
+    btn.disabled = true; btn.textContent = 'Lançando...';
+
+    // A Worker recalcula tudo (regra de fidelidade, promoção ativa, saldo) do
+    // lado do servidor — o que mandamos aqui é só a intenção do funcionário.
+    const resultado = await callApi('/api/lancar-pontos', {
+      empresaId,
+      clienteUid: lancamentoCliente.uid,
+      tipo,
+      valorCompra: tipo === 'automatico' ? document.getElementById('lanc-valor').value : undefined,
+      pontosManual: tipo === 'manual' ? document.getElementById('lanc-pontos').value : undefined,
+      motivo
+    });
+
+    await auditLog('pontos.lancar', { type: 'usuario', id: lancamentoCliente.uid, label: lancamentoCliente.name }, { pontos: resultado.pontos, origem: resultado.origem, empresaId });
+
+    if (resultado.promocaoTitulo) showToast(`🎉 Promoção "${resultado.promocaoTitulo}" aplicada!`, 'success');
+    if (resultado.subiuDeNivel) showToast(`🎉 ${lancamentoCliente.name} subiu para o nível ${resultado.nivelNovo}!`, 'success');
+    (resultado.novasConquistas || []).forEach(c => showToast(`🏆 Conquista desbloqueada: ${c.nome}`, 'success'));
+    showToast(`${resultado.pontos} pontos lançados para ${lancamentoCliente.name}.`, 'success');
+
+    if (clienteAtual && clienteAtual.uid === lancamentoCliente.uid) {
+      clienteAtual.saldo += resultado.pontos;
+      document.getElementById('cliente-saldo').textContent = clienteAtual.saldo;
+      await renderRecompensasParaCliente();
+    }
+    closeModal('modal-lancamento');
+    loadLancamentos();
+  } catch (e) {
+    errEl.textContent = '⚠ ' + e.message;
+    errEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Lançar';
+  }
+}
+
+async function loadLancamentos() {
+  const tbody = document.getElementById('lancamentos-tbody');
+  try {
+    const snap = await db.ref('pontos/lancamentos/' + empresaId).orderByChild('createdAt').limitToLast(100).once('value');
+    const items = [];
+    snap.forEach(c => items.push({ id: c.key, ...c.val() }));
+    items.reverse();
+    if (!items.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted" style="padding:24px">Nenhum lançamento ainda.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = items.map(l => `
+      <tr>
+        <td data-label="Data">${esc(formatDateTime(l.createdAt))}</td>
+        <td data-label="Cliente">${esc(l.usuarioNome || l.usuarioId)}</td>
+        <td data-label="Tipo"><span class="badge ${l.tipo === 'estorno' ? 'badge-danger' : 'badge-active'}">${esc(l.tipo)}</span></td>
+        <td data-label="Pontos">${l.tipo === 'estorno' ? '-' : '+'}${l.quantidade}</td>
+        <td data-label="Motivo">${esc(l.motivo || (l.origem === 'automatico' ? 'Compra: ' + formatCurrency(l.valorCompra) : '—'))}</td>
+        <td data-label="">${l.tipo === 'credito' && !l.estornado ? `<button class="btn btn-ghost btn-sm" onclick="estornarLancamento('${l.id}')"><i data-lucide="undo-2"></i></button>` : ''}</td>
+      </tr>`).join('');
+    renderIcons();
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted" style="padding:24px">Erro: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+async function estornarLancamento(lancId) {
+  if (!confirm('Confirma o estorno deste lançamento? Os pontos serão retirados do cliente.')) return;
+  try {
+    const resultado = await callApi('/api/estornar-lancamento', { empresaId, lancamentoId: lancId });
+    await auditLog('pontos.estornar', { type: 'lancamento', id: lancId, label: empresaId }, { empresaId });
+    showToast('Lançamento estornado.', 'success');
+    loadLancamentos();
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// RECOMPENSAS — CRUD
+// ══════════════════════════════════════════════════════
+let recompensasCache = {};
+
+async function loadRecompensas() {
+  const el = document.getElementById('recompensas-list');
+  try {
+    const snap = await db.ref('recompensas/' + empresaId).once('value');
+    recompensasCache = snap.val() || {};
+    renderRecompensasList();
+  } catch (e) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-sub">Erro: ${esc(e.message)}</div></div>`;
+  }
+}
+
+function renderRecompensasList() {
+  const ids = Object.keys(recompensasCache);
+  const el = document.getElementById('recompensas-list');
+  if (!ids.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon"><i data-lucide="gift"></i></div><div class="empty-title">Nenhuma recompensa cadastrada</div><div class="empty-sub">Clique em "Nova Recompensa" para começar.</div></div>';
+    renderIcons();
+    return;
+  }
+  el.innerHTML = ids.map(id => {
+    const r = recompensasCache[id];
+    return `
+      <div class="entity-card ${r.status === 'ativo' ? 'ativo' : 'suspenso'}">
+        <div>
+          <div class="entity-name">${esc(r.nome)} <span class="badge ${r.status === 'ativo' ? 'badge-active' : 'badge-closed'}">${esc(r.status)}</span></div>
+          <div class="entity-sub">${formatPoints(r.valorPontos)} · ${r.quantidadeDisponivel} disponível(is) · ${esc(r.tipo)}</div>
+        </div>
+        <div class="entity-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openEditRecompensa('${id}')"><i data-lucide="pencil"></i></button>
+        </div>
+      </div>`;
+  }).join('');
+  renderIcons();
+}
+
+function openNewRecompensaModal() {
+  const limite = planoLimite('maxRecompensas');
+  if (Object.keys(recompensasCache).length >= limite) {
+    showToast(`Seu plano permite até ${limite} recompensa(s) cadastrada(s). Fale com o administrador para fazer upgrade.`, 'error');
+    return;
+  }
+  document.getElementById('recompensa-modal-title').innerHTML = '<i data-lucide="gift"></i> Nova Recompensa';
+  document.getElementById('rec-id').value = '';
+  document.getElementById('rec-nome').value = '';
+  document.getElementById('rec-descricao').value = '';
+  document.getElementById('rec-tipo').value = 'produto';
+  document.getElementById('rec-pontos').value = '';
+  document.getElementById('rec-quantidade').value = '';
+  document.getElementById('rec-status').value = 'ativo';
+  document.getElementById('rec-imagem-preview').style.display = 'none';
+  document.getElementById('recompensa-modal-error').classList.add('hidden');
+  openModal('modal-recompensa');
+}
+
+function openEditRecompensa(id) {
+  const r = recompensasCache[id];
+  if (!r) return;
+  document.getElementById('recompensa-modal-title').innerHTML = '<i data-lucide="gift"></i> Editar Recompensa';
+  document.getElementById('rec-id').value = id;
+  document.getElementById('rec-nome').value = r.nome || '';
+  document.getElementById('rec-descricao').value = r.descricao || '';
+  document.getElementById('rec-tipo').value = r.tipo || 'produto';
+  document.getElementById('rec-pontos').value = r.valorPontos ?? '';
+  document.getElementById('rec-quantidade').value = r.quantidadeDisponivel ?? '';
+  document.getElementById('rec-status').value = r.status || 'ativo';
+  const preview = document.getElementById('rec-imagem-preview');
+  if (r.imagemUrl) { preview.src = r.imagemUrl; preview.style.display = 'block'; } else { preview.style.display = 'none'; }
+  document.getElementById('recompensa-modal-error').classList.add('hidden');
+  openModal('modal-recompensa');
+}
+
+async function saveRecompensa() {
+  const errEl = document.getElementById('recompensa-modal-error');
+  const btn = document.getElementById('btn-save-recompensa');
+  errEl.classList.add('hidden');
+  try {
+    const id = document.getElementById('rec-id').value;
+    const nome = document.getElementById('rec-nome').value.trim();
+    const valorPontos = parseInt(document.getElementById('rec-pontos').value);
+    const quantidadeDisponivel = parseInt(document.getElementById('rec-quantidade').value);
+    if (!nome) throw new Error('Informe o nome da recompensa.');
+    if (!valorPontos || valorPontos <= 0) throw new Error('Informe o valor em pontos.');
+    if (isNaN(quantidadeDisponivel) || quantidadeDisponivel < 0) throw new Error('Informe a quantidade disponível.');
+
+    btn.disabled = true; btn.textContent = 'Salvando...';
+
+    const data = {
+      nome,
+      descricao: document.getElementById('rec-descricao').value.trim(),
+      tipo: document.getElementById('rec-tipo').value,
+      valorPontos, quantidadeDisponivel,
+      status: document.getElementById('rec-status').value
+    };
+
+    const file = document.getElementById('rec-imagem-file').files[0];
+    if (file) {
+      showToast('Enviando imagem...', 'info');
+      data.imagemUrl = await uploadImage(file);
+    }
+
+    const finalId = id || db.ref('recompensas/' + empresaId).push().key;
+    if (!id) data.createdAt = Date.now();
+    await db.ref('recompensas/' + empresaId + '/' + finalId).update(data);
+
+    await auditLog(id ? 'recompensa.editar' : 'recompensa.criar', { type: 'recompensa', id: finalId, label: nome }, {});
+    showToast('Recompensa salva.', 'success');
+    closeModal('modal-recompensa');
+    loadRecompensas();
+  } catch (e) {
+    errEl.textContent = '⚠ ' + e.message;
+    errEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Salvar';
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// RESGATES — no balcão (a partir de Clientes) e fila de pendentes
+// ══════════════════════════════════════════════════════
+
+/**
+ * Resgates agora são processados pela Worker (Cloudflare) — ela debita saldo
+ * e estoque de forma segura contra corrida (transações com ETag no RTDB) e
+ * roda a gamificação, tudo do lado do servidor. Ver cloudflare-worker/.
+ */
+async function resgatarNoBalcao(recompensaId) {
+  if (!clienteAtual) return;
+  if (!confirm(`Confirma o resgate para ${clienteAtual.name}?`)) return;
+  try {
+    const resultado = await callApi('/api/resgatar', {
+      empresaId, modo: 'balcao', clienteUid: clienteAtual.uid, recompensaId
+    });
+    await auditLog('resgate.balcao', { type: 'usuario', id: clienteAtual.uid, label: clienteAtual.name }, { recompensaId, empresaId });
+    if (resultado.subiuDeNivel) showToast(`🎉 ${clienteAtual.name} subiu para o nível ${resultado.nivelNovo}!`, 'success');
+    (resultado.novasConquistas || []).forEach(c => showToast(`🏆 Conquista desbloqueada: ${c.nome}`, 'success'));
+    showToast('Resgate confirmado.', 'success');
+
+    const rec = recompensasCache[recompensaId];
+    if (rec) clienteAtual.saldo -= rec.valorPontos;
+    document.getElementById('cliente-saldo').textContent = clienteAtual.saldo;
+    await renderRecompensasParaCliente();
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+async function loadResgates() {
+  const pendEl = document.getElementById('resgates-pendentes-list');
+  const histEl = document.getElementById('resgates-historico-list');
+  try {
+    const snap = await db.ref('resgates/' + empresaId).orderByChild('createdAt').limitToLast(150).once('value');
+    const items = [];
+    snap.forEach(c => items.push({ id: c.key, ...c.val() }));
+    items.reverse();
+
+    const pendentes = items.filter(r => r.status === 'pendente');
+    const historico  = items.filter(r => r.status !== 'pendente');
+
+    pendEl.innerHTML = pendentes.length ? pendentes.map(r => `
+      <div class="entity-card pendente">
+        <div>
+          <div class="entity-name">${esc(r.usuarioNome || r.usuarioId)} — ${esc(r.recompensaNome || r.recompensaId)}</div>
+          <div class="entity-sub">${formatPoints(r.pontosGastos)} · pedido em ${esc(formatDateTime(r.createdAt))}</div>
+        </div>
+        <div class="entity-actions">
+          <button class="btn btn-success btn-sm" onclick="confirmarResgatePendente('${r.id}')"><i data-lucide="check"></i> Confirmar</button>
+          <button class="btn btn-danger btn-sm" onclick="cancelarResgatePendente('${r.id}')"><i data-lucide="x"></i> Cancelar</button>
+        </div>
+      </div>`).join('') : '<div class="empty-state"><div class="empty-sub">Nenhum pedido pendente.</div></div>';
+
+    histEl.innerHTML = historico.length ? historico.slice(0, 50).map(r => `
+      <div class="entity-card ${r.status === 'entregue' ? 'ativo' : 'suspenso'}">
+        <div>
+          <div class="entity-name">${esc(r.usuarioNome || r.usuarioId)} — ${esc(r.recompensaNome || r.recompensaId)} <span class="badge ${r.status === 'entregue' ? 'badge-active' : 'badge-closed'}">${esc(r.status)}</span></div>
+          <div class="entity-sub">${formatPoints(r.pontosGastos)} · ${esc(formatDateTime(r.entregueAt || r.createdAt))}</div>
+        </div>
+      </div>`).join('') : '<div class="empty-state"><div class="empty-sub">Nenhum resgate ainda.</div></div>';
+
+    renderIcons();
+  } catch (e) {
+    pendEl.innerHTML = `<div class="empty-state"><div class="empty-sub">Erro: ${esc(e.message)}</div></div>`;
+  }
+}
+
+async function confirmarResgatePendente(resgateId) {
+  try {
+    const resultado = await callApi('/api/resgatar', { empresaId, modo: 'confirmar', resgateId });
+    await auditLog('resgate.confirmar', { type: 'resgate', id: resgateId, label: empresaId }, { empresaId });
+    if (resultado.subiuDeNivel) showToast(`🎉 Cliente subiu para o nível ${resultado.nivelNovo}!`, 'success');
+    (resultado.novasConquistas || []).forEach(c => showToast(`🏆 Conquista desbloqueada: ${c.nome}`, 'success'));
+    showToast('Resgate confirmado.', 'success');
+    loadResgates();
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+async function cancelarResgatePendente(resgateId) {
+  if (!confirm('Cancelar este pedido de resgate?')) return;
+  try {
+    await callApi('/api/cancelar-resgate', { empresaId, resgateId });
+    await auditLog('resgate.cancelar', { type: 'resgate', id: resgateId, label: empresaId }, { empresaId });
+    showToast('Pedido cancelado.', 'info');
+    loadResgates();
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// PROMOÇÕES — CRUD (só dono) + multiplicador aplicado em Pontos
+// ══════════════════════════════════════════════════════
+let promocoesCache = {};
+
+async function loadPromocoes() {
+  const el = document.getElementById('promocoes-list');
+  try {
+    const snap = await db.ref('promocoes/' + empresaId).once('value');
+    promocoesCache = snap.val() || {};
+    renderPromocoesList();
+  } catch (e) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-sub">Erro: ${esc(e.message)}</div></div>`;
+  }
+}
+
+const PROMO_LABELS = { pontos_dobro: 'Pontos em dobro', pontos_triplo: 'Pontos triplicados', campanha: 'Campanha' };
+
+function renderPromocoesList() {
+  const ids = Object.keys(promocoesCache);
+  const el = document.getElementById('promocoes-list');
+  if (!ids.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon"><i data-lucide="tag"></i></div><div class="empty-title">Nenhuma promoção cadastrada</div></div>';
+    renderIcons();
+    return;
+  }
+  const hoje = new Date().toISOString().slice(0, 10);
+  el.innerHTML = ids.map(id => {
+    const p = promocoesCache[id];
+    const vigente = p.ativo && p.dataInicio <= hoje && hoje <= p.dataFim;
+    return `
+      <div class="entity-card ${vigente ? 'ativo' : 'suspenso'}">
+        <div>
+          <div class="entity-name">${esc(p.titulo)} ${vigente ? '<span class="badge badge-active">vigente</span>' : (p.ativo ? '<span class="badge badge-closed">fora do período</span>' : '<span class="badge badge-closed">inativa</span>')}</div>
+          <div class="entity-sub">${esc(PROMO_LABELS[p.tipo] || p.tipo)} · ${esc(p.dataInicio)} a ${esc(p.dataFim)}</div>
+        </div>
+        <div class="entity-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openEditPromocao('${id}')"><i data-lucide="pencil"></i></button>
+        </div>
+      </div>`;
+  }).join('');
+  renderIcons();
+}
+
+function openNewPromocaoModal() {
+  document.getElementById('promo-id').value = '';
+  document.getElementById('promo-titulo').value = '';
+  document.getElementById('promo-tipo').value = 'pontos_dobro';
+  document.getElementById('promo-inicio').value = '';
+  document.getElementById('promo-fim').value = '';
+  document.getElementById('promo-ativa').checked = true;
+  document.getElementById('promocao-modal-error').classList.add('hidden');
+  openModal('modal-promocao');
+}
+
+function openEditPromocao(id) {
+  const p = promocoesCache[id];
+  if (!p) return;
+  document.getElementById('promo-id').value = id;
+  document.getElementById('promo-titulo').value = p.titulo || '';
+  document.getElementById('promo-tipo').value = p.tipo || 'pontos_dobro';
+  document.getElementById('promo-inicio').value = p.dataInicio || '';
+  document.getElementById('promo-fim').value = p.dataFim || '';
+  document.getElementById('promo-ativa').checked = !!p.ativo;
+  document.getElementById('promocao-modal-error').classList.add('hidden');
+  openModal('modal-promocao');
+}
+
+async function savePromocao() {
+  const errEl = document.getElementById('promocao-modal-error');
+  const btn = document.getElementById('btn-save-promocao');
+  errEl.classList.add('hidden');
+  try {
+    const id = document.getElementById('promo-id').value;
+    const titulo = document.getElementById('promo-titulo').value.trim();
+    const dataInicio = document.getElementById('promo-inicio').value;
+    const dataFim = document.getElementById('promo-fim').value;
+    if (!titulo) throw new Error('Informe o título da promoção.');
+    if (!dataInicio || !dataFim) throw new Error('Informe o período (início e fim).');
+    if (dataFim < dataInicio) throw new Error('A data final não pode ser antes da inicial.');
+
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    const data = {
+      titulo, dataInicio, dataFim,
+      tipo: document.getElementById('promo-tipo').value,
+      ativo: document.getElementById('promo-ativa').checked
+    };
+    const finalId = id || db.ref('promocoes/' + empresaId).push().key;
+    if (!id) data.createdAt = Date.now();
+    await db.ref('promocoes/' + empresaId + '/' + finalId).update(data);
+
+    await auditLog(id ? 'promocao.editar' : 'promocao.criar', { type: 'promocao', id: finalId, label: titulo }, {});
+    showToast('Promoção salva.', 'success');
+    closeModal('modal-promocao');
+    loadPromocoes();
+  } catch (e) {
+    errEl.textContent = '⚠ ' + e.message;
+    errEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Salvar';
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// FUNCIONÁRIOS — só dono cria/edita
+// ══════════════════════════════════════════════════════
+let funcionariosCache = {};
+
+async function loadFuncionarios() {
+  const el = document.getElementById('funcionarios-list');
+  try {
+    const snap = await db.ref('funcionarios/' + empresaId).once('value');
+    funcionariosCache = snap.val() || {};
+    renderFuncionariosList();
+  } catch (e) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-sub">Erro: ${esc(e.message)}</div></div>`;
+  }
+}
+
+function permBadges(perm) {
+  const map = { lancarPontos: 'Lançar', resgatarRecompensas: 'Resgatar', gerenciarClientes: 'Clientes', gerenciarRecompensas: 'Recompensas' };
+  return Object.entries(map).filter(([k]) => perm?.[k]).map(([, label]) => `<span class="badge badge-teal">${label}</span>`).join(' ') || '<span class="text-muted text-sm">sem permissões</span>';
+}
+
+function renderFuncionariosList() {
+  const ids = Object.keys(funcionariosCache).filter(id => !funcionariosCache[id].isOwner);
+  const el = document.getElementById('funcionarios-list');
+  if (!ids.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon"><i data-lucide="user-cog"></i></div><div class="empty-title">Nenhum funcionário cadastrado</div><div class="empty-sub">Clique em "Novo Funcionário" para dar acesso à equipe.</div></div>';
+    renderIcons();
+    return;
+  }
+  el.innerHTML = ids.map(id => {
+    const f = funcionariosCache[id];
+    return `
+      <div class="entity-card ${f.status === 'ativo' ? 'ativo' : 'suspenso'}">
+        <div>
+          <div class="entity-name">${esc(f.nome)} <span class="badge ${f.status === 'ativo' ? 'badge-active' : 'badge-closed'}">${esc(f.status)}</span></div>
+          <div class="entity-sub">${permBadges(f.permissions)}</div>
+        </div>
+        <div class="entity-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openEditFuncionario('${id}')"><i data-lucide="pencil"></i></button>
+          ${f.status === 'ativo'
+            ? `<button class="btn btn-warning btn-sm" onclick="toggleFuncionarioStatus('${id}','bloqueado')"><i data-lucide="lock"></i></button>`
+            : `<button class="btn btn-success btn-sm" onclick="toggleFuncionarioStatus('${id}','ativo')"><i data-lucide="unlock"></i></button>`}
+        </div>
+      </div>`;
+  }).join('');
+  renderIcons();
+}
+
+function openNewFuncionarioModal() {
+  const limite = planoLimite('maxFuncionarios');
+  const qtdAtual = Object.values(funcionariosCache).filter(f => !f.isOwner).length;
+  if (qtdAtual >= limite) {
+    showToast(`Seu plano permite até ${limite} funcionário(s) além do dono. Fale com o administrador para fazer upgrade.`, 'error');
+    return;
+  }
+  document.getElementById('funcionario-modal-title').innerHTML = '<i data-lucide="user-cog"></i> Novo Funcionário';
+  document.getElementById('func-uid').value = '';
+  document.getElementById('func-nome').value = '';
+  document.getElementById('func-email').value = '';
+  document.getElementById('func-senha').value = '';
+  document.getElementById('func-email-wrap').classList.remove('hidden');
+  document.getElementById('func-senha-wrap').classList.remove('hidden');
+  ['func-perm-lancar','func-perm-resgatar','func-perm-clientes','func-perm-recompensas'].forEach(id => document.getElementById(id).checked = false);
+  document.getElementById('funcionario-modal-error').classList.add('hidden');
+  openModal('modal-funcionario');
+}
+
+function openEditFuncionario(id) {
+  const f = funcionariosCache[id];
+  if (!f) return;
+  document.getElementById('funcionario-modal-title').innerHTML = '<i data-lucide="user-cog"></i> Editar Funcionário';
+  document.getElementById('func-uid').value = id;
+  document.getElementById('func-nome').value = f.nome || '';
+  document.getElementById('func-email-wrap').classList.add('hidden'); // e-mail não muda por aqui
+  document.getElementById('func-senha-wrap').classList.add('hidden'); // senha não se edita por aqui
+  document.getElementById('func-perm-lancar').checked = !!f.permissions?.lancarPontos;
+  document.getElementById('func-perm-resgatar').checked = !!f.permissions?.resgatarRecompensas;
+  document.getElementById('func-perm-clientes').checked = !!f.permissions?.gerenciarClientes;
+  document.getElementById('func-perm-recompensas').checked = !!f.permissions?.gerenciarRecompensas;
+  document.getElementById('funcionario-modal-error').classList.add('hidden');
+  openModal('modal-funcionario');
+}
+
+async function saveFuncionario() {
+  const errEl = document.getElementById('funcionario-modal-error');
+  const btn = document.getElementById('btn-save-funcionario');
+  errEl.classList.add('hidden');
+  try {
+    const uid = document.getElementById('func-uid').value;
+    const nome = document.getElementById('func-nome').value.trim();
+    if (!nome) throw new Error('Informe o nome do funcionário.');
+
+    const permissions = {
+      lancarPontos: document.getElementById('func-perm-lancar').checked,
+      resgatarRecompensas: document.getElementById('func-perm-resgatar').checked,
+      gerenciarClientes: document.getElementById('func-perm-clientes').checked,
+      gerenciarRecompensas: document.getElementById('func-perm-recompensas').checked
+    };
+
+    btn.disabled = true; btn.textContent = 'Salvando...';
+
+    if (uid) {
+      // edição — só nome e permissões
+      await db.ref('users/' + uid + '/name').set(nome);
+      await db.ref('users/' + uid + '/permissions').set(permissions);
+      await db.ref('funcionarios/' + empresaId + '/' + uid).update({ nome, permissions });
+      await auditLog('funcionario.editar', { type: 'usuario', id: uid, label: nome }, { permissions });
+      showToast('Funcionário atualizado.', 'success');
+    } else {
+      const email = document.getElementById('func-email').value.trim();
+      const senha = document.getElementById('func-senha').value;
+      if (!email || !senha) throw new Error('Informe e-mail e senha inicial.');
+      if (senha.length < 6) throw new Error('Senha deve ter no mínimo 6 caracteres.');
+
+      const novoUid = await createFirebaseUser(email, senha);
+      await db.ref('users/' + novoUid).set({
+        role: 'empresa', status: 'ativo', isOwner: false, empresaId,
+        name: nome, email, permissions, createdAt: Date.now()
+      });
+      await db.ref('funcionarios/' + empresaId + '/' + novoUid).set({
+        nome, permissions, status: 'ativo', isOwner: false
+      });
+      await auditLog('funcionario.criar', { type: 'usuario', id: novoUid, label: nome }, { permissions });
+      showToast('Funcionário cadastrado.', 'success');
+    }
+
+    closeModal('modal-funcionario');
+    loadFuncionarios();
+  } catch (e) {
+    errEl.textContent = '⚠ ' + e.message;
+    errEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Salvar';
+  }
+}
+
+async function toggleFuncionarioStatus(uid, novoStatus) {
+  const f = funcionariosCache[uid];
+  if (!f) return;
+  if (!confirm(`Confirma ${novoStatus === 'ativo' ? 'desbloquear' : 'bloquear'} ${f.nome}?`)) return;
+  try {
+    await db.ref('users/' + uid + '/status').set(novoStatus);
+    await db.ref('funcionarios/' + empresaId + '/' + uid + '/status').set(novoStatus);
+    await auditLog('funcionario.status', { type: 'usuario', id: uid, label: f.nome }, { status: novoStatus });
+    showToast('Status atualizado.', 'success');
+    loadFuncionarios();
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// RELATÓRIOS — básico pra todo mundo, avançado gated pelo plano
+// ══════════════════════════════════════════════════════
+async function loadRelatorios() {
+  try {
+    const [lancSnap, resgSnap] = await Promise.all([
+      db.ref('pontos/lancamentos/' + empresaId).once('value'),
+      db.ref('resgates/' + empresaId).once('value')
+    ]);
+
+    const lancamentos = [];
+    lancSnap.forEach(c => lancamentos.push(c.val()));
+    const resgates = [];
+    resgSnap.forEach(c => resgates.push(c.val()));
+
+    // ── Básico (todo plano) ──
+    let pontosEmitidos = 0;
+    lancamentos.forEach(l => {
+      if (l.tipo === 'credito') pontosEmitidos += l.quantidade || 0;
+      if (l.tipo === 'estorno') pontosEmitidos -= l.quantidade || 0;
+    });
+    const entregues = resgates.filter(r => r.status === 'entregue');
+    const pontosResgatados = entregues.reduce((soma, r) => soma + (r.pontosGastos || 0), 0);
+
+    document.getElementById('rel-pontos-emitidos').textContent = pontosEmitidos;
+    document.getElementById('rel-pontos-resgatados').textContent = pontosResgatados;
+    document.getElementById('rel-total-lancamentos').textContent = lancamentos.filter(l => l.tipo === 'credito').length;
+    document.getElementById('rel-total-resgates').textContent = entregues.length;
+
+    // ── Avançado (gated pelo plano) ──
+    const permitido = planoPermite('relatoriosAvancados');
+    document.getElementById('rel-avancado-bloqueado').classList.toggle('hidden', permitido);
+    document.getElementById('rel-avancado-conteudo').classList.toggle('hidden', !permitido);
+    if (!permitido) return;
+
+    // Faturamento gerado (só lançamentos com valorCompra — automático/promoção)
+    const faturamento = lancamentos
+      .filter(l => l.tipo === 'credito' && l.valorCompra)
+      .reduce((soma, l) => soma + l.valorCompra, 0);
+    document.getElementById('rel-faturamento').textContent = formatCurrency(faturamento);
+
+    // Evolução mensal — últimos 6 meses, pontos emitidos por mês
+    const hoje = new Date();
+    const meses = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(hoje.getFullYear(), hoje.getMonth() - i, 1);
+      meses.push({ chave: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`, label: d.toLocaleDateString('pt-BR', { month: 'short' }), total: 0 });
+    }
+    lancamentos.forEach(l => {
+      if (l.tipo !== 'credito' || !l.createdAt) return;
+      const d = new Date(l.createdAt);
+      const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const mes = meses.find(m => m.chave === chave);
+      if (mes) mes.total += l.quantidade || 0;
+    });
+    const maxMes = Math.max(1, ...meses.map(m => m.total));
+    document.getElementById('rel-evolucao-chart').innerHTML = `
+      <div class="bar-chart">
+        ${meses.map(m => `
+          <div class="bar-chart-col">
+            <div class="bar-chart-value">${m.total}</div>
+            <div class="bar-chart-bar" style="height:${Math.max(3, (m.total / maxMes) * 100)}%"></div>
+            <div class="bar-chart-label">${esc(m.label)}</div>
+          </div>`).join('')}
+      </div>`;
+
+    // Clientes mais ativos (por lançamentos de crédito)
+    const porCliente = {};
+    lancamentos.filter(l => l.tipo === 'credito').forEach(l => {
+      const key = l.usuarioId;
+      if (!porCliente[key]) porCliente[key] = { nome: l.usuarioNome || key, qtd: 0, pontos: 0 };
+      porCliente[key].qtd++;
+      porCliente[key].pontos += l.quantidade || 0;
+    });
+    const topAtivos = Object.values(porCliente).sort((a, b) => b.pontos - a.pontos).slice(0, 10);
+    document.getElementById('rel-clientes-ativos-tbody').innerHTML = topAtivos.length ? topAtivos.map(c => `
+      <tr><td data-label="Cliente">${esc(c.nome)}</td><td data-label="Lançamentos">${c.qtd}</td><td data-label="Pontos">${c.pontos}</td></tr>
+    `).join('') : '<tr><td colspan="3" class="text-center text-muted" style="padding:24px">Nenhum lançamento ainda.</td></tr>';
+
+    // Clientes que mais resgataram
+    const porClienteResgate = {};
+    entregues.forEach(r => {
+      const key = r.usuarioId;
+      if (!porClienteResgate[key]) porClienteResgate[key] = { nome: r.usuarioNome || key, qtd: 0, pontos: 0 };
+      porClienteResgate[key].qtd++;
+      porClienteResgate[key].pontos += r.pontosGastos || 0;
+    });
+    const topResgates = Object.values(porClienteResgate).sort((a, b) => b.pontos - a.pontos).slice(0, 10);
+    document.getElementById('rel-clientes-resgates-tbody').innerHTML = topResgates.length ? topResgates.map(c => `
+      <tr><td data-label="Cliente">${esc(c.nome)}</td><td data-label="Resgates">${c.qtd}</td><td data-label="Pontos">${c.pontos}</td></tr>
+    `).join('') : '<tr><td colspan="3" class="text-center text-muted" style="padding:24px">Nenhum resgate ainda.</td></tr>';
+  } catch (e) {
+    showToast('Erro ao carregar relatórios: ' + e.message, 'error');
+  }
+}
+</script>
+<script src="../assets/js/sw-update.js"></script>
+</body>
+</html>

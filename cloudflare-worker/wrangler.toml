@@ -1,0 +1,30 @@
+name = "local-points-api"
+main = "src/index.js"
+compatibility_date = "2024-09-23"
+
+# Rate limiting nativo da Cloudflare (API de bindings — requer Wrangler >= 4.36.0).
+# namespace_id é um número que você escolhe (não é gerado pela Cloudflare) —
+# só precisa ser único dentro da sua conta. period só aceita 10 ou 60 segundos.
+#
+# RATE_LIMITER_IP: barra abuso bruto por IP, antes mesmo de checar o token
+# (protege contra spam com token inválido/ausente).
+[[ratelimits]]
+binding = "RATE_LIMITER_IP"
+namespace_id = "1001"
+simple = { limit = 60, period = 60 }
+
+# RATE_LIMITER_UID: mais rigoroso, por usuário autenticado — pega abuso de
+# uma conta específica (comprometida ou com bug no client fazendo loop).
+[[ratelimits]]
+binding = "RATE_LIMITER_UID"
+namespace_id = "1002"
+simple = { limit = 30, period = 60 }
+
+# As variáveis sensíveis NÃO ficam neste arquivo — são secrets, configuradas
+# uma vez via linha de comando (ver CLOUDFLARE.md para o passo a passo):
+#
+#   wrangler secret put FIREBASE_PROJECT_ID
+#   wrangler secret put FIREBASE_DATABASE_URL
+#   wrangler secret put FIREBASE_SERVICE_ACCOUNT_EMAIL
+#   wrangler secret put FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY
+#   wrangler secret put ALLOWED_ORIGIN

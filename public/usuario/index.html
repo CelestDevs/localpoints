@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Local Points</title>
+  <link rel="manifest" href="../manifest.json">
+  <meta name="theme-color" content="#16130F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Local Points">
+  <link rel="apple-touch-icon" href="../assets/icons/icon-192.png">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="../assets/js/firebase-config.js"></script>
+  <script src="../assets/js/audit.js"></script>
+  <script src="../assets/js/api.js"></script>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading">
+  <div class="loading-logo">Local<span class="logo-points">Points</span></div>
+  <div class="spinner"></div>
+</div>
+
+<div id="app" style="display:none">
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark"><span class="logo-local">Local</span><span class="logo-dot"></span><span class="logo-points">Points</span></div>
+      <span class="logo-sub">Minha Conta</span>
+    </div>
+    <div class="sidebar-user">
+      <div class="sidebar-user-name" id="user-name">Usuário</div>
+      <div class="sidebar-user-role text-violet">USUÁRIO</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Painel</div>
+      <a class="nav-item active" onclick="showPage('carteira');closeSidebar()" id="nav-carteira"><span class="nav-icon"><i data-lucide="wallet"></i></span> Carteira</a>
+      <a class="nav-item" onclick="showPage('id');closeSidebar()" id="nav-id"><span class="nav-icon"><i data-lucide="qr-code"></i></span> Identificação</a>
+
+      <div class="nav-section-label">Descobrir</div>
+      <a class="nav-item" onclick="showPage('recompensas');closeSidebar()" id="nav-recompensas"><span class="nav-icon"><i data-lucide="gift"></i></span> Recompensas</a>
+      <a class="nav-item" onclick="showPage('cupons');closeSidebar()" id="nav-cupons"><span class="nav-icon"><i data-lucide="ticket"></i></span> Cupons</a>
+      <a class="nav-item" onclick="showPage('cashback');closeSidebar()" id="nav-cashback"><span class="nav-icon"><i data-lucide="circle-dollar-sign"></i></span> Cashback</a>
+
+      <div class="nav-section-label">Competir</div>
+      <a class="nav-item" onclick="showPage('ranking');closeSidebar()" id="nav-ranking"><span class="nav-icon"><i data-lucide="list-ordered"></i></span> Ranking</a>
+      <a class="nav-item" onclick="showPage('campeonatos');closeSidebar()" id="nav-campeonatos"><span class="nav-icon"><i data-lucide="trophy"></i></span> Campeonatos</a>
+      <a class="nav-item" onclick="showPage('conquistas');closeSidebar()" id="nav-conquistas"><span class="nav-icon"><i data-lucide="sparkles"></i></span> Conquistas</a>
+      <a class="nav-item" onclick="showPage('indicacoes');closeSidebar()" id="nav-indicacoes"><span class="nav-icon"><i data-lucide="share-2"></i></span> Indicações</a>
+
+      <div class="nav-section-label">Conta</div>
+      <a class="nav-item" onclick="showPage('notificacoes');closeSidebar()" id="nav-notificacoes"><span class="nav-icon"><i data-lucide="bell"></i></span> Notificações</a>
+      <a class="nav-item" onclick="showPage('perfil');closeSidebar()" id="nav-perfil"><span class="nav-icon"><i data-lucide="user"></i></span> Meu Perfil</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="doLogout()"><i data-lucide="log-out"></i> Sair</button>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="mobile-header">
+      <button class="hamburger" onclick="openSidebar()"><span></span><span></span><span></span></button>
+      <div class="mobile-logo"><span class="logo-local">Local</span><span class="logo-dot"></span><span class="logo-points">Points</span></div>
+      <div style="width:36px"></div>
+    </div>
+    <div class="topbar">
+      <div class="topbar-title" id="page-title">Carteira</div>
+      <div class="status-dot">ONLINE</div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- CARTEIRA -->
+      <div id="page-carteira">
+        <div class="card" style="text-align:center;padding:28px 16px">
+          <div class="stat-label" style="justify-content:center">Saldo total de pontos</div>
+          <div class="points-chip" style="font-size:22px;padding:10px 22px;margin-top:6px"><span class="logo-dot"></span> <span id="wallet-total">0</span> pts</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="store"></i> Empresas participantes</div></div>
+          <div id="wallet-list">
+            <div class="empty-state">
+              <div class="empty-icon"><i data-lucide="wallet"></i></div>
+              <div class="empty-title">Sua carteira está vazia</div>
+              <div class="empty-sub">Assim que você pontuar em alguma empresa parceira, o saldo aparece aqui.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECOMPENSAS -->
+      <div id="page-recompensas" class="hidden">
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="gift"></i> Catálogo</div></div>
+          <div id="catalogo-list"><div class="empty-state"><div class="empty-title">Carregando...</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="clock"></i> Meus pedidos de resgate</div></div>
+          <div id="meus-resgates-list"><div class="empty-state"><div class="empty-sub">Você ainda não pediu nenhum resgate.</div></div></div>
+        </div>
+      </div>
+
+      <!-- IDENTIFICAÇÃO -->
+      <div id="page-id" class="hidden">
+        <div class="card" style="text-align:center">
+          <div class="card-header" style="justify-content:center;border-bottom:none">
+            <div class="card-title"><i data-lucide="qr-code"></i> Sua identificação</div>
+          </div>
+          <p class="text-secondary mb-16">Mostre este QR Code (ou seu código) no caixa para pontuar ou resgatar.</p>
+          <div id="qr-container" style="display:inline-block;padding:14px;background:#fff;border-radius:16px"></div>
+          <div class="points-chip mt-16" style="font-size:18px;letter-spacing:2px" id="unique-code-display">————————</div>
+          <div class="mt-16">
+            <button class="btn btn-ghost btn-sm" onclick="shareCode()"><i data-lucide="share-2"></i> Compartilhar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONQUISTAS -->
+      <div id="page-conquistas" class="hidden">
+        <div class="card" style="text-align:center">
+          <div class="stat-label" style="justify-content:center">Seu nível</div>
+          <div class="stat-value" id="gamif-nivel-nome" style="font-size:26px;margin:4px 0">—</div>
+          <div class="progress-track mt-8"><div class="progress-fill" id="gamif-xp-bar" style="width:0%"></div></div>
+          <div class="text-muted text-xs mt-8" id="gamif-xp-label">0 XP</div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card orange"><div class="stat-label">Streak</div><div class="stat-value" id="gamif-streak">0</div><div class="stat-sub">dias consecutivos</div></div>
+          <div class="stat-card violet"><div class="stat-label">Conquistas</div><div class="stat-value" id="gamif-conquistas-count">0</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="sparkles"></i> Conquistas</div></div>
+          <div id="conquistas-grid" class="achievements-grid"></div>
+        </div>
+      </div>
+
+      <!-- CUPONS -->
+      <div id="page-cupons" class="hidden">
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="ticket"></i> Meus Cupons</div></div>
+          <p class="text-secondary text-sm mb-12">Gerados quando você resgata uma recompensa do tipo desconto. Mostre o código na loja.</p>
+          <div id="cupons-list"><div class="empty-state"><div class="empty-sub">Nenhum cupom ainda.</div></div></div>
+        </div>
+      </div>
+
+      <!-- CASHBACK -->
+      <div id="page-cashback" class="hidden">
+        <div class="card" style="text-align:center;padding:28px 16px">
+          <div class="stat-label" style="justify-content:center">Saldo total de cashback</div>
+          <div class="points-chip" style="font-size:22px;padding:10px 22px;margin-top:6px;background:var(--teal-dim);color:var(--teal)"><i data-lucide="circle-dollar-sign" style="width:18px;height:18px"></i> <span id="cashback-total">R$ 0,00</span></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="store"></i> Saldo por empresa</div></div>
+          <div id="cashback-empresas-list"><div class="empty-state"><div class="empty-sub">Nenhum cashback ainda.</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="history"></i> Histórico</div></div>
+          <div id="cashback-historico-list"><div class="empty-state"><div class="empty-sub">Nenhuma movimentação ainda.</div></div></div>
+        </div>
+      </div>
+
+      <!-- INDICAÇÕES -->
+      <div id="page-indicacoes" class="hidden">
+        <div class="card" style="text-align:center">
+          <div class="card-header" style="justify-content:center;border-bottom:none"><div class="card-title"><i data-lucide="share-2"></i> Indique e ganhe</div></div>
+          <p class="text-secondary mb-16">Compartilhe seu código. Quando seu indicado fizer a primeira compra pontuada, você ganha XP bônus.</p>
+          <div class="points-chip" style="font-size:18px;letter-spacing:2px" id="indicacao-code-display">————————</div>
+          <div class="mt-16"><button class="btn btn-ghost btn-sm" onclick="compartilharIndicacao()"><i data-lucide="share-2"></i> Compartilhar</button></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="users"></i> Quem você já indicou</div></div>
+          <div id="indicacoes-list"><div class="empty-state"><div class="empty-sub">Você ainda não indicou ninguém.</div></div></div>
+        </div>
+      </div>
+
+      <!-- NOTIFICAÇÕES -->
+      <div id="page-notificacoes" class="hidden">
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="bell"></i> Notificações</div></div>
+          <div id="notificacoes-list"><div class="empty-state"><div class="empty-sub">Nenhuma notificação ainda.</div></div></div>
+        </div>
+      </div>
+
+      <!-- RANKING -->
+      <div id="page-ranking" class="hidden">
+        <div class="card" id="ranking-temporada-card">
+          <div class="card-header"><div class="card-title"><i data-lucide="calendar-range"></i> <span id="ranking-temporada-nome">Temporada atual</span></div></div>
+          <div id="ranking-temporada-list"><div class="empty-state"><div class="empty-sub">Nenhuma temporada ativa no momento.</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="trophy"></i> Ranking global (todas as temporadas)</div></div>
+          <div id="ranking-global-list"><div class="empty-state"><div class="empty-sub">Ninguém no ranking ainda.</div></div></div>
+        </div>
+      </div>
+
+      <!-- CAMPEONATOS -->
+      <div id="page-campeonatos" class="hidden">
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="trophy"></i> Inscrições abertas</div></div>
+          <div id="campeonatos-abertos-list"><div class="empty-state"><div class="empty-sub">Nenhum campeonato com inscrições abertas.</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="swords"></i> Em andamento / encerrados</div></div>
+          <div id="campeonatos-outros-list"><div class="empty-state"><div class="empty-sub">Nenhum campeonato por aqui ainda.</div></div></div>
+        </div>
+      </div>
+
+      <!-- MÓDULO EM CONSTRUÇÃO -->
+      <div id="page-soon" class="hidden">
+        <div class="card">
+          <div class="empty-state">
+            <div class="empty-icon"><i data-lucide="hammer" id="soon-icon"></i></div>
+            <div class="empty-title" id="soon-title">Módulo em construção</div>
+            <div class="empty-sub">Chega numa próxima fase do desenvolvimento.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PERFIL -->
+      <div id="page-perfil" class="hidden">
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="user"></i> Meu Perfil</div></div>
+          <div id="perfil-error" class="alert alert-danger hidden"></div>
+          <div class="form-group"><label class="form-label">Nome</label><input type="text" id="perfil-name" class="form-control"></div>
+          <div class="form-group"><label class="form-label">Telefone</label><input type="tel" id="perfil-phone" class="form-control"></div>
+          <div class="form-group"><label class="form-label">E-mail</label><input type="email" id="perfil-email" class="form-control" disabled></div>
+          <button class="btn btn-primary" onclick="saveProfile()">Salvar Perfil</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- MODAL — Ver chaveamento (somente leitura) -->
+<div class="modal-overlay" id="modal-ver-chaveamento">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <div class="modal-title" id="ver-chaveamento-titulo"><i data-lucide="trophy"></i> Chaveamento</div>
+      <button class="modal-close" onclick="closeModal('modal-ver-chaveamento')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="ver-chaveamento-resultado" class="alert alert-success hidden"></div>
+      <div id="ver-chaveamento-bracket"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-ver-chaveamento')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+let currentUser = null;
+
+auth.onAuthStateChanged(async user => {
+  if (!user) { window.location.replace('../index.html'); return; }
+  try {
+    const snap = await db.ref('users/' + user.uid).once('value');
+    const ud = snap.val();
+    if (!ud || ud.role !== 'usuario') { window.location.replace('../index.html'); return; }
+
+    currentUser = { uid: user.uid, ...ud };
+    window._auditActor = { uid: user.uid, name: ud.name, email: ud.email, role: 'usuario' };
+
+    document.getElementById('user-name').textContent = ud.name || ud.email;
+    document.getElementById('unique-code-display').textContent = ud.uniqueCode || '————————';
+    document.getElementById('indicacao-code-display').textContent = ud.referralCode || '————————';
+    if (ud.uniqueCode && window.QRCode) {
+      new QRCode(document.getElementById('qr-container'), {
+        text: ud.uniqueCode, width: 176, height: 176,
+        colorDark: '#16130F', colorLight: '#ffffff'
+      });
+    }
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    renderIcons();
+    loadWallet();
+  } catch (e) {
+    window.location.replace('../index.html');
+  }
+});
+
+function renderIcons() { if (window.lucide) lucide.createIcons(); }
+
+async function doLogout() {
+  if (window.ensureSWReady) await ensureSWReady();
+  await auth.signOut();
+  window.location.replace('../index.html');
+}
+
+function openSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').classList.add('show'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('show'); }
+
+function showToast(msg, type = 'info') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  t.onclick = () => t.remove();
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 4500);
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); renderIcons(); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+const PAGE_TITLES = { carteira: 'Carteira', recompensas: 'Recompensas', cupons: 'Cupons', cashback: 'Cashback', conquistas: 'Conquistas', indicacoes: 'Indicações', notificacoes: 'Notificações', ranking: 'Ranking', campeonatos: 'Campeonatos', id: 'Identificação', perfil: 'Meu Perfil' };
+
+function showPage(id) {
+  ['carteira', 'recompensas', 'cupons', 'cashback', 'conquistas', 'indicacoes', 'notificacoes', 'ranking', 'campeonatos', 'id', 'soon', 'perfil'].forEach(p => document.getElementById('page-' + p).classList.toggle('hidden', p !== id));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navEl = document.getElementById('nav-' + id);
+  if (navEl) navEl.classList.add('active');
+  document.getElementById('page-title').textContent = PAGE_TITLES[id] || id;
+  if (id === 'perfil') fillProfileForm();
+  if (id === 'recompensas') loadCatalogo();
+  if (id === 'conquistas') loadConquistasUsuario();
+  if (id === 'cupons') loadCupons();
+  if (id === 'cashback') loadCashback();
+  if (id === 'indicacoes') loadIndicacoes();
+  if (id === 'notificacoes') loadNotificacoes();
+  if (id === 'ranking') loadRanking();
+  if (id === 'campeonatos') loadCampeonatosUsuario();
+}
+
+function showSoon(label, icon) {
+  showPage('soon');
+  document.getElementById('page-title').textContent = label;
+  document.getElementById('soon-title').textContent = label + ' — em construção';
+  document.getElementById('soon-icon').setAttribute('data-lucide', icon || 'hammer');
+  renderIcons();
+}
+
+function shareCode() {
+  const code = currentUser.uniqueCode;
+  if (navigator.share) {
+    navigator.share({ title: 'Meu código Local Points', text: `Meu código de identificação: ${code}` }).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(code);
+    showToast('Código copiado!', 'success');
+  }
+}
+
+function fillProfileForm() {
+  document.getElementById('perfil-name').value = currentUser.name || '';
+  document.getElementById('perfil-phone').value = currentUser.phone || '';
+  document.getElementById('perfil-email').value = currentUser.email || '';
+}
+
+async function saveProfile() {
+  const errEl = document.getElementById('perfil-error');
+  errEl.classList.add('hidden');
+  try {
+    const name  = document.getElementById('perfil-name').value.trim();
+    const phone = document.getElementById('perfil-phone').value.trim();
+    if (!name) throw new Error('Informe seu nome.');
+
+    await db.ref('users/' + currentUser.uid + '/name').set(name);
+    currentUser.name = name;
+
+    if (phone) {
+      const normalized = normalizePhone(phone);
+      await db.ref('users/' + currentUser.uid + '/phone').set(normalized);
+      await db.ref('telefones/' + normalized).set(currentUser.uid);
+      currentUser.phone = normalized;
+    }
+
+    document.getElementById('user-name').textContent = name;
+    await auditLog('usuario.perfil', { type: 'usuario', id: currentUser.uid, label: name }, {});
+    showToast('Perfil atualizado.', 'success');
+    fillProfileForm();
+  } catch (e) {
+    errEl.textContent = '⚠ ' + e.message;
+    errEl.classList.remove('hidden');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// CARTEIRA — saldo real por empresa
+// ══════════════════════════════════════════════════════
+let walletSaldos = {}; // { empresaId: pontos }
+
+async function loadWallet() {
+  try {
+    const snap = await db.ref('pontos/saldo/' + currentUser.uid).once('value');
+    walletSaldos = snap.val() || {};
+    const total = Object.values(walletSaldos).reduce((a, b) => a + (b || 0), 0);
+    document.getElementById('wallet-total').textContent = total;
+
+    const ids = Object.keys(walletSaldos).filter(id => walletSaldos[id] > 0);
+    const listEl = document.getElementById('wallet-list');
+    if (!ids.length) return; // mantém o empty-state padrão do HTML
+
+    const empresas = await Promise.all(ids.map(id => db.ref('empresas/' + id).once('value')));
+    listEl.innerHTML = ids.map((id, i) => {
+      const e = empresas[i].val() || {};
+      return `
+        <div class="entity-card ativo">
+          <div>
+            <div class="entity-name">${esc(e.name || 'Empresa')}</div>
+            <div class="entity-sub">${esc(e.category || '')}</div>
+          </div>
+          <div class="points-chip"><span class="logo-dot"></span> ${walletSaldos[id]} pts</div>
+        </div>`;
+    }).join('');
+    renderIcons();
+  } catch (e) {
+    console.warn('[wallet] erro ao carregar:', e.message);
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// RECOMPENSAS — catálogo entre empresas + solicitar resgate
+// ══════════════════════════════════════════════════════
+async function loadCatalogo() {
+  const listEl = document.getElementById('catalogo-list');
+  try {
+    const empSnap = await db.ref('empresas').orderByChild('status').equalTo('ativo').once('value');
+    const empresas = empSnap.val() || {};
+    const empresaIds = Object.keys(empresas);
+
+    if (!empresaIds.length) {
+      listEl.innerHTML = '<div class="empty-state"><div class="empty-sub">Nenhuma empresa parceira ainda.</div></div>';
+    } else {
+      const recSnaps = await Promise.all(empresaIds.map(id => db.ref('recompensas/' + id).once('value')));
+      let html = '';
+      empresaIds.forEach((empresaId, i) => {
+        const recs = recSnaps[i].val() || {};
+        const ativas = Object.entries(recs).filter(([, r]) => r.status === 'ativo' && (r.quantidadeDisponivel ?? 0) > 0);
+        if (!ativas.length) return;
+        const saldo = walletSaldos[empresaId] || 0;
+        html += `<div class="section-title">${esc(empresas[empresaId].name)} <span class="text-muted text-xs">(seu saldo: ${saldo} pts)</span></div>`;
+        html += ativas.map(([recId, r]) => `
+          <div class="entity-card ${saldo >= r.valorPontos ? 'ativo' : 'pendente'}">
+            <div>
+              <div class="entity-name">${esc(r.nome)} <span class="badge badge-accent">${formatPoints(r.valorPontos)}</span></div>
+              <div class="entity-sub">${esc(r.descricao || '')}</div>
+            </div>
+            <div class="entity-actions">
+              <button class="btn btn-primary btn-sm" ${saldo < r.valorPontos ? 'disabled' : ''} onclick="solicitarResgate('${empresaId}','${recId}')"><i data-lucide="gift"></i> Resgatar</button>
+            </div>
+          </div>`).join('');
+      });
+      listEl.innerHTML = html || '<div class="empty-state"><div class="empty-sub">Nenhuma recompensa disponível no momento.</div></div>';
+    }
+    renderIcons();
+    loadMeusResgates();
+  } catch (e) {
+    listEl.innerHTML = `<div class="empty-state"><div class="empty-sub">Erro: ${esc(e.message)}</div></div>`;
+  }
+}
+
+async function solicitarResgate(empresaId, recompensaId) {
+  try {
+    const rec = (await db.ref('recompensas/' + empresaId + '/' + recompensaId).once('value')).val();
+    if (!rec) throw new Error('Recompensa não encontrada.');
+    const saldo = walletSaldos[empresaId] || 0;
+    if (saldo < rec.valorPontos) throw new Error('Saldo insuficiente.');
+    if (!confirm(`Solicitar resgate de "${rec.nome}" por ${rec.valorPontos} pontos? A empresa confirma a entrega.`)) return;
+
+    // A confirmação real (débito de saldo/estoque) só acontece quando a
+    // empresa confirmar — isso aqui só registra o pedido como 'pendente'.
+    await callApi('/api/solicitar-resgate', { empresaId, recompensaId });
+
+    await auditLog('resgate.solicitar', { type: 'recompensa', id: recompensaId, label: rec.nome }, { empresaId });
+    showToast('Pedido enviado! A empresa vai confirmar a entrega.', 'success');
+    loadMeusResgates();
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+async function loadMeusResgates() {
+  const el = document.getElementById('meus-resgates-list');
+  try {
+    const snap = await db.ref('resgates_usuario/' + currentUser.uid).once('value');
+    const items = Object.entries(snap.val() || {}).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+    if (!items.length) return; // mantém o empty-state do HTML
+    const statusBadge = { pendente: 'badge-warning', entregue: 'badge-active', cancelado: 'badge-closed' };
+    el.innerHTML = items.map(([id, r]) => `
+      <div class="entity-card ${r.status === 'entregue' ? 'ativo' : r.status === 'cancelado' ? 'suspenso' : 'pendente'}">
+        <div>
+          <div class="entity-name">${esc(r.recompensaNome)} <span class="badge ${statusBadge[r.status] || 'badge-closed'}">${esc(r.status)}</span></div>
+          <div class="entity-sub">${formatPoints(r.pontosGastos)} · ${esc(formatDateTime(r.createdAt))}</div>
+        </div>
+      </div>`).join('');
+    renderIcons();
+  } catch (e) {
+    console.warn('[meus-resgates] erro:', e.message);
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// CONQUISTAS — nível, XP, streak e grid de conquistas
+// ══════════════════════════════════════════════════════
+async function loadConquistasUsuario() {
+  try {
+    // A checagem/desbloqueio de conquistas agora é feita pela Worker,
+    // automaticamente, a cada lançamento de pontos ou resgate confirmado.
+    // Aqui só exibimos o estado atual — não checamos nada de novo.
+    const userSnap = await db.ref('users/' + currentUser.uid).once('value');
+    const user = userSnap.val() || {};
+    currentUser = { ...currentUser, ...user };
+
+    const [niveisSnap, conqSnap, unlockedSnap] = await Promise.all([
+      db.ref('gamificacao/niveis').once('value'),
+      db.ref('gamificacao/conquistas').once('value'),
+      db.ref('gamificacao/conquistasUsuario/' + currentUser.uid).once('value')
+    ]);
+    const niveis = Object.values(niveisSnap.val() || {}).sort((a, b) => (a.xpNecessario || 0) - (b.xpNecessario || 0));
+    const xp = user.xp || 0;
+
+    // Nível atual = o último cujo xpNecessario <= xp; indiceAtual aponta pro
+    // próximo da lista ordenada.
+    let nivelAtual = { nome: null, xpNecessario: 0 };
+    let indiceAtual = 0;
+    niveis.forEach((n, i) => {
+      if (xp >= (n.xpNecessario || 0)) { nivelAtual = n; indiceAtual = i + 1; }
+    });
+    const proximoNivel = niveis[indiceAtual] || null;
+
+    document.getElementById('gamif-nivel-nome').textContent = nivelAtual.nome || 'Sem nível ainda';
+    document.getElementById('gamif-streak').textContent = user.streak?.count || 0;
+
+    if (proximoNivel) {
+      const faixa = proximoNivel.xpNecessario - (nivelAtual.xpNecessario || 0);
+      const progresso = faixa > 0 ? Math.min(100, ((xp - (nivelAtual.xpNecessario || 0)) / faixa) * 100) : 100;
+      document.getElementById('gamif-xp-bar').style.width = progresso + '%';
+      document.getElementById('gamif-xp-label').textContent = `${xp} XP · faltam ${proximoNivel.xpNecessario - xp} XP para ${proximoNivel.nome}`;
+    } else {
+      document.getElementById('gamif-xp-bar').style.width = '100%';
+      document.getElementById('gamif-xp-label').textContent = `${xp} XP · nível máximo alcançado`;
+    }
+
+    const conquistas = conqSnap.val() || {};
+    const unlocked = unlockedSnap.val() || {};
+    const ids = Object.keys(conquistas);
+    document.getElementById('gamif-conquistas-count').textContent = `${Object.keys(unlocked).length}/${ids.length}`;
+
+    const gridEl = document.getElementById('conquistas-grid');
+    if (!ids.length) {
+      gridEl.innerHTML = '<div class="empty-state"><div class="empty-sub">Nenhuma conquista disponível ainda.</div></div>';
+    } else {
+      gridEl.innerHTML = ids.map(id => {
+        const c = conquistas[id];
+        const isUnlocked = !!unlocked[id];
+        return `
+          <div class="achievement ${isUnlocked ? '' : 'locked'}">
+            <div class="achievement-icon"><i data-lucide="${esc(c.icone || 'star')}"></i></div>
+            <div class="achievement-name">${esc(c.nome)}</div>
+          </div>`;
+      }).join('');
+    }
+    renderIcons();
+  } catch (e) {
+    console.warn('[conquistas] erro:', e.message);
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// CUPONS
+// ══════════════════════════════════════════════════════
+async function loadCupons() {
+  const el = document.getElementById('cupons-list');
+  try {
+    const snap = await db.ref('cupons/' + currentUser.uid).once('value');
+    const items = [];
+    snap.forEach(c => items.push({ id: c.key, ...c.val() }));
+    items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    if (!items.length) return; // mantém o empty-state do HTML
+
+    el.innerHTML = items.map(c => `
+      <div class="entity-card ${c.status === 'disponivel' ? 'ativo' : 'suspenso'}">
+        <div>
+          <div class="entity-name">${esc(c.recompensaNome)} <span class="badge ${c.status === 'disponivel' ? 'badge-active' : 'badge-closed'}">${esc(c.status)}</span></div>
+          <div class="entity-sub font-m" style="letter-spacing:1px">${esc(c.codigo)}</div>
+        </div>
+        ${c.status === 'disponivel' ? `<button class="btn btn-ghost btn-sm" onclick="marcarCupomUtilizado('${c.id}')">Marcar usado</button>` : ''}
+      </div>`).join('');
+    renderIcons();
+  } catch (e) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-sub">Erro: ${esc(e.message)}</div></div>`;
+  }
+}
+
+async function marcarCupomUtilizado(cupomId) {
+  if (!confirm('Confirma que já usou este cupom na loja?')) return;
+  try {
+    await db.ref('cupons/' + currentUser.uid + '/' + cupomId + '/status').set('utilizado');
+    await auditLog('cupom.usar', { type: 'cupom', id: cupomId, label: '' }, {});
+    showToast('Cupom marcado como utilizado.', 'success');
+    loadCupons();
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// CASHBACK
+// ══════════════════════════════════════════════════════
+async function loadCashback() {
+  try {
+    const saldoSnap = await db.ref('cashback/saldo/' + currentUser.uid).once('value');
+    const saldos = saldoSnap.val() || {};
+    const total = Object.values(saldos).reduce((a, b) => a + (b || 0), 0);
+    document.getElementById('cashback-total').textContent = formatCurrency(total);
+
+    const empresaIds = Object.keys(saldos).filter(id => saldos[id] > 0);
+    const listEl = document.getElementById('cashback-empresas-list');
+    if (empresaIds.length) {
+      const empresas = await Promise.all(empresaIds.map(id => db.ref('empresas/' + id).once('value')));
+      listEl.innerHTML = empresaIds.map((id, i) => {
+        const e = empresas[i].val() || {};
+        return `
+          <div class="entity-card ativo">
+            <div><div class="entity-name">${esc(e.name || 'Empresa')}</div></div>
+            <div class="points-chip" style="background:var(--teal-dim);color:var(--teal)">${formatCurrency(saldos[id])}</div>
+          </div>`;
+      }).join('');
+    }
+
+    const histSnap = await db.ref('cashback/historico_usuario/' + currentUser.uid).once('value');
+    const hist = [];
+    histSnap.forEach(c => hist.push(c.val()));
+    hist.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    if (hist.length) {
+      document.getElementById('cashback-historico-list').innerHTML = hist.slice(0, 30).map(h => `
+        <div class="entity-card ${h.tipo === 'credito' ? 'ativo' : 'suspenso'}">
+          <div>
+            <div class="entity-name">${esc(h.empresaNome || '')} <span class="badge ${h.tipo === 'credito' ? 'badge-active' : 'badge-closed'}">${h.tipo === 'credito' ? 'Recebido' : 'Usado'}</span></div>
+            <div class="entity-sub">${esc(formatDateTime(h.createdAt))}</div>
+          </div>
+          <div class="text-sm ${h.tipo === 'credito' ? 'text-green' : 'text-red'}">${h.tipo === 'credito' ? '+' : '-'}${formatCurrency(h.valor)}</div>
+        </div>`).join('');
+    }
+    renderIcons();
+  } catch (e) {
+    console.warn('[cashback] erro:', e.message);
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// INDICAÇÕES
+// ══════════════════════════════════════════════════════
+function compartilharIndicacao() {
+  const code = currentUser.referralCode;
+  const texto = `Use meu código "${code}" pra entrar no Local Points!`;
+  if (navigator.share) {
+    navigator.share({ title: 'Local Points', text: texto }).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(texto);
+    showToast('Texto copiado!', 'success');
+  }
+}
+
+async function loadIndicacoes() {
+  const el = document.getElementById('indicacoes-list');
+  try {
+    const snap = await db.ref('indicacoes/' + currentUser.uid).once('value');
+    const items = [];
+    snap.forEach(c => items.push(c.val()));
+    items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    if (!items.length) return; // mantém o empty-state do HTML
+
+    el.innerHTML = items.map(i => `
+      <div class="entity-card ativo">
+        <div>
+          <div class="entity-name">${esc(i.indicadoNome || 'Usuário')} <span class="badge badge-active">${esc(i.status)}</span></div>
+          <div class="entity-sub">${esc(formatDateTime(i.createdAt))}</div>
+        </div>
+        <div class="badge badge-violet">+${i.recompensaXp || 0} XP</div>
+      </div>`).join('');
+    renderIcons();
+  } catch (e) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-sub">Erro: ${esc(e.message)}</div></div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// NOTIFICAÇÕES
+// ══════════════════════════════════════════════════════
+async function loadNotificacoes() {
+  const el = document.getElementById('notificacoes-list');
+  try {
+    const snap = await db.ref('notificacoes/' + currentUser.uid).once('value');
+    const items = [];
+    snap.forEach(c => items.push({ id: c.key, ...c.val() }));
+    items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    if (!items.length) return; // mantém o empty-state do HTML
+
+    el.innerHTML = items.map(n => `
+      <div class="entity-card ${n.lida ? 'suspenso' : 'ativo'}">
+        <div>
+          <div class="entity-name">${esc(n.titulo)} ${n.lida ? '' : '<span class="badge badge-accent">novo</span>'}</div>
+          <div class="entity-sub">${esc(n.mensagem)}</div>
+          <div class="text-muted text-xs mt-8">${esc(formatDateTime(n.createdAt))}</div>
+        </div>
+      </div>`).join('');
+    renderIcons();
+
+    items.filter(n => !n.lida).forEach(n => db.ref('notificacoes/' + currentUser.uid + '/' + n.id + '/lida').set(true).catch(() => {}));
+  } catch (e) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-sub">Erro: ${esc(e.message)}</div></div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// RANKING
+// ══════════════════════════════════════════════════════
+function renderRankingList(elId, entradas, meuUid) {
+  const el = document.getElementById(elId);
+  if (!entradas.length) return;
+  entradas.sort((a, b) => (b.pontos || 0) - (a.pontos || 0));
+  el.innerHTML = entradas.slice(0, 20).map((r, i) => `
+    <div class="entity-card ${r.uid === meuUid ? 'ativo' : ''}">
+      <div><div class="entity-name">#${i + 1} ${esc(r.nome)} ${r.uid === meuUid ? '<span class="badge badge-accent">você</span>' : ''}</div></div>
+      <div class="points-chip">${r.pontos || 0} pts</div>
+    </div>`).join('');
+}
+
+async function loadRanking() {
+  try {
+    const globalSnap = await db.ref('ranking_global').once('value');
+    const globalEntradas = [];
+    globalSnap.forEach(c => globalEntradas.push({ uid: c.key, ...c.val() }));
+    renderRankingList('ranking-global-list', globalEntradas, currentUser.uid);
+
+    const tempSnap = await db.ref('temporadas').orderByChild('status').equalTo('ativa').once('value');
+    const temporadas = tempSnap.val() || {};
+    const temporadaId = Object.keys(temporadas)[0];
+    if (temporadaId) {
+      document.getElementById('ranking-temporada-nome').textContent = temporadas[temporadaId].nome;
+      const rtSnap = await db.ref('ranking_temporada/' + temporadaId).once('value');
+      const rtEntradas = [];
+      rtSnap.forEach(c => rtEntradas.push({ uid: c.key, ...c.val() }));
+      renderRankingList('ranking-temporada-list', rtEntradas, currentUser.uid);
+    }
+    renderIcons();
+  } catch (e) {
+    console.warn('[ranking] erro:', e.message);
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// CAMPEONATOS
+// ══════════════════════════════════════════════════════
+let campeonatosCacheUsuario = {};
+
+async function loadCampeonatosUsuario() {
+  try {
+    const snap = await db.ref('campeonatos').once('value');
+    campeonatosCacheUsuario = snap.val() || {};
+
+    const abertos = [], outros = [];
+    Object.entries(campeonatosCacheUsuario).forEach(([id, c]) => {
+      if (c.status === 'inscricoes') abertos.push([id, c]); else outros.push([id, c]);
+    });
+
+    const abertosEl = document.getElementById('campeonatos-abertos-list');
+    abertosEl.innerHTML = abertos.length ? abertos.map(([id, c]) => {
+      const qtd = Object.keys(c.participantes || {}).length;
+      const jaInscrito = !!(c.participantes || {})[currentUser.uid];
+      const cheio = qtd >= c.maxParticipantes;
+      return `
+        <div class="entity-card ativo">
+          <div>
+            <div class="entity-name">${esc(c.nome)}</div>
+            <div class="entity-sub">${esc(c.descricao || '')} · ${qtd}/${c.maxParticipantes} inscritos · taxa ${c.taxaInscricaoXp || 0} XP</div>
+          </div>
+          <button class="btn ${jaInscrito ? 'btn-ghost' : 'btn-primary'} btn-sm" ${jaInscrito || cheio ? 'disabled' : ''} onclick="inscreverCampeonato('${id}')">
+            ${jaInscrito ? 'Inscrito' : cheio ? 'Esgotado' : 'Inscrever-se'}
+          </button>
+        </div>`;
+    }).join('') : '<div class="empty-state"><div class="empty-sub">Nenhum campeonato com inscrições abertas.</div></div>';
+
+    const outrosEl = document.getElementById('campeonatos-outros-list');
+    outrosEl.innerHTML = outros.length ? outros.map(([id, c]) => `
+      <div class="entity-card ${c.status === 'encerrado' ? 'suspenso' : 'ativo'}">
+        <div>
+          <div class="entity-name">${esc(c.nome)} <span class="badge ${c.status === 'encerrado' ? 'badge-closed' : 'badge-violet'}">${c.status === 'encerrado' ? 'Encerrado' : 'Em andamento'}</span></div>
+          <div class="entity-sub">${c.campeaoNome ? '🏆 ' + esc(c.campeaoNome) : ''}</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="verChaveamentoCampeonato('${id}')">Ver chaveamento</button>
+      </div>`).join('') : '<div class="empty-state"><div class="empty-sub">Nenhum campeonato por aqui ainda.</div></div>';
+
+    renderIcons();
+  } catch (e) {
+    console.warn('[campeonatos] erro:', e.message);
+  }
+}
+
+async function inscreverCampeonato(campeonatoId) {
+  const c = campeonatosCacheUsuario[campeonatoId];
+  if (!c) return;
+  if (!confirm(`Inscrever-se em "${c.nome}" por ${c.taxaInscricaoXp || 0} XP?`)) return;
+  try {
+    await callApi('/api/campeonato/inscrever', { campeonatoId });
+    await auditLog('campeonato.inscrever', { type: 'campeonato', id: campeonatoId, label: c.nome }, {});
+    showToast('Inscrição confirmada!', 'success');
+    loadCampeonatosUsuario();
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+function verChaveamentoCampeonato(campeonatoId) {
+  const c = campeonatosCacheUsuario[campeonatoId];
+  if (!c || !c.chaveamento) { showToast('Chaveamento ainda não foi sorteado.', 'info'); return; }
+
+  document.getElementById('ver-chaveamento-titulo').innerHTML = `<i data-lucide="trophy"></i> ${esc(c.nome)}`;
+  const resultEl = document.getElementById('ver-chaveamento-resultado');
+  if (c.status === 'encerrado') {
+    resultEl.classList.remove('hidden');
+    resultEl.innerHTML = `🏆 Campeão: <strong>${esc(c.campeaoNome || '—')}</strong> · Vice: <strong>${esc(c.viceNome || '—')}</strong>`;
+  } else {
+    resultEl.classList.add('hidden');
+  }
+
+  const rounds = c.chaveamento.rounds || [];
+  document.getElementById('ver-chaveamento-bracket').innerHTML = rounds.map(round => `
+    <div class="match-round-title"><i data-lucide="swords"></i> ${esc(round.nome)}</div>
+    ${round.partidas.map(m => {
+      const row = (uid, nome, isVencedor) => {
+        if (!uid) return `<div class="match-player-row vazio"><span class="match-player-name">A definir</span></div>`;
+        return `<div class="match-player-row ${isVencedor ? 'vencedor' : ''}"><span class="match-player-name">${esc(nome || uid)}${uid === currentUser.uid ? ' (você)' : ''}</span></div>`;
+      };
+      return `<div class="match-card">
+        ${row(m.jogador1Uid, m.jogador1Nome, m.vencedorUid === m.jogador1Uid)}
+        ${row(m.jogador2Uid, m.jogador2Nome, m.vencedorUid === m.jogador2Uid)}
+      </div>`;
+    }).join('')}
+  `).join('');
+
+  openModal('modal-ver-chaveamento');
+}
+</script>
+<script src="../assets/js/sw-update.js"></script>
+</body>
+</html>

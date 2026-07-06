@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Local Points — Setup Inicial</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="assets/js/firebase-config.js"></script>
+  <script src="assets/js/audit.js"></script>
+</head>
+<body>
+<div class="login-page">
+  <div class="login-bg-glow"></div>
+
+  <div class="login-box" style="max-width:460px">
+    <div class="login-logo">
+      <div class="login-logo-box">
+        <span class="login-logo-local">Local</span>
+        <span class="login-logo-dot"></span>
+        <span class="login-logo-points">Points</span>
+      </div>
+      <div class="login-logo-sub">Setup inicial da plataforma</div>
+    </div>
+
+    <div id="already-done" class="hidden">
+      <div class="alert alert-info">
+        O setup já foi concluído neste projeto. Se você é o administrador,
+        <a href="index.html" style="color:inherit;text-decoration:underline">faça login normalmente</a>.
+      </div>
+    </div>
+
+    <div id="setup-form">
+      <div class="alert alert-info">
+        Esta tela roda <strong>uma única vez</strong>, para criar o primeiro
+        administrador e configurar a plataforma. Depois de concluída, ela se
+        desativa sozinha.
+      </div>
+
+      <div id="setup-error" class="alert alert-danger hidden"></div>
+
+      <div class="section-title">Administrador</div>
+      <div class="form-group">
+        <label class="form-label">Nome</label>
+        <input type="text" id="s-name" class="form-control" placeholder="Seu nome">
+      </div>
+      <div class="form-group">
+        <label class="form-label">E-mail</label>
+        <input type="email" id="s-email" class="form-control" placeholder="admin@seudominio.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Senha</label>
+        <input type="password" id="s-password" class="form-control" placeholder="Mínimo 6 caracteres">
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section-title">Plataforma</div>
+      <div class="form-group">
+        <label class="form-label">Nome da plataforma</label>
+        <input type="text" id="s-platform-name" class="form-control" value="Local Points">
+      </div>
+      <div class="form-group">
+        <label class="form-label">E-mail de suporte</label>
+        <input type="email" id="s-support-email" class="form-control" placeholder="suporte@seudominio.com">
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section-title">Hospedagem de imagens (IMGDB)</div>
+      <div class="form-group">
+        <label class="form-label">Chave de API do IMGDB (api.imgbb.com)</label>
+        <input type="text" id="s-imgdb-key" class="form-control" placeholder="Cole aqui sua chave">
+        <div class="form-hint">Fica guardada no banco, visível só para admin e empresas — nunca para usuários. Pode deixar em branco e configurar depois em Configurações.</div>
+      </div>
+
+      <button class="btn btn-primary btn-block btn-lg mt-8" id="btn-setup" onclick="runSetup()">CONCLUIR SETUP</button>
+    </div>
+  </div>
+</div>
+
+<script>
+async function checkAlreadyDone() {
+  try {
+    const snap = await db.ref('settings/setupDone').once('value');
+    if (snap.val() === true) {
+      document.getElementById('setup-form').classList.add('hidden');
+      document.getElementById('already-done').classList.remove('hidden');
+    }
+  } catch (e) { /* segue normal — provavelmente ainda não configurado */ }
+}
+checkAlreadyDone();
+
+function showErr(msg) {
+  const el = document.getElementById('setup-error');
+  el.textContent = '⚠ ' + msg;
+  el.classList.remove('hidden');
+}
+
+async function runSetup() {
+  const name         = document.getElementById('s-name').value.trim();
+  const email        = document.getElementById('s-email').value.trim();
+  const password     = document.getElementById('s-password').value;
+  const platformName = document.getElementById('s-platform-name').value.trim() || 'Local Points';
+  const supportEmail = document.getElementById('s-support-email').value.trim();
+  const imgdbKey     = document.getElementById('s-imgdb-key').value.trim();
+  const btn          = document.getElementById('btn-setup');
+
+  document.getElementById('setup-error').classList.add('hidden');
+  if (!name || !email || !password) { showErr('Preencha nome, e-mail e senha do administrador.'); return; }
+  if (password.length < 6) { showErr('Senha deve ter no mínimo 6 caracteres.'); return; }
+
+  btn.disabled = true; btn.textContent = 'Configurando...';
+
+  try {
+    // Confere de novo por segurança (evita corrida entre duas abas)
+    const already = await db.ref('settings/setupDone').once('value');
+    if (already.val() === true) {
+      showErr('O setup já foi concluído por outra sessão. Recarregue a página.');
+      btn.disabled = false; btn.textContent = 'CONCLUIR SETUP';
+      return;
+    }
+
+    // 1. Cria a conta do admin
+    const cred = await auth.createUserWithEmailAndPassword(email, password);
+    const uid  = cred.user.uid;
+
+    // 2. Grava o perfil do admin — precisa ser o PRIMEIRO write, pois as
+    //    regras seguintes (settings/public etc.) exigem role === 'admin'
+    //    já presente no banco.
+    await db.ref('users/' + uid).set({
+      role: 'admin',
+      status: 'ativo',
+      name,
+      email,
+      createdAt: Date.now()
+    });
+
+    // 3. Configurações públicas da plataforma
+    await db.ref('settings/public').set({
+      platformName,
+      supportEmail: supportEmail || email,
+      primaryColor: '#F2C265',
+      secondaryColor: '#7FD8BE',
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    });
+
+    // 4. Chave do IMGDB (se informada agora)
+    if (imgdbKey) {
+      await db.ref('settings/integrations').set({ imgdbApiKey: imgdbKey });
+    }
+
+    // 5. Tranca o setup — precisa ser o ÚLTIMO write
+    await db.ref('settings/setupDone').set(true);
+
+    window._auditActor = { uid, name, email, role: 'admin' };
+    await auditLog('setup.concluido', { type: 'plataforma', label: platformName }, {});
+
+    window.location.replace('admin/index.html');
+  } catch (err) {
+    showErr(err.message || 'Erro ao configurar. Tente novamente.');
+    btn.disabled = false; btn.textContent = 'CONCLUIR SETUP';
+  }
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Enter') runSetup(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,1939 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Local Points — Admin</title>
+  <link rel="manifest" href="../manifest.json">
+  <meta name="theme-color" content="#16130F">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LP Admin">
+  <link rel="apple-touch-icon" href="../assets/icons/icon-192.png">
+  <link rel="stylesheet" href="../assets/css/style.css">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="../assets/js/firebase-config.js"></script>
+  <script src="../assets/js/audit.js"></script>
+  <script src="../assets/js/storage.js"></script>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading">
+  <div class="loading-logo">Local<span class="logo-points">Points</span></div>
+  <div class="spinner"></div>
+</div>
+
+<div id="app" style="display:none">
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark"><span class="logo-local">Local</span><span class="logo-dot"></span><span class="logo-points">Points</span></div>
+      <span class="logo-sub">Admin</span>
+    </div>
+    <div class="sidebar-user">
+      <div class="sidebar-user-name" id="admin-name">Admin</div>
+      <div class="sidebar-user-role text-accent">ADMINISTRADOR</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Painel</div>
+      <a class="nav-item active" onclick="showPage('dashboard');closeSidebar()" id="nav-dashboard"><span class="nav-icon"><i data-lucide="layout-dashboard"></i></span> Dashboard</a>
+
+      <div class="nav-section-label">Gestão</div>
+      <a class="nav-item" onclick="showPage('empresas');closeSidebar()" id="nav-empresas"><span class="nav-icon"><i data-lucide="store"></i></span> Empresas</a>
+      <a class="nav-item" onclick="showPage('usuarios');closeSidebar()" id="nav-usuarios"><span class="nav-icon"><i data-lucide="users"></i></span> Usuários</a>
+      <a class="nav-item" onclick="showPage('planos');closeSidebar()" id="nav-planos"><span class="nav-icon"><i data-lucide="credit-card"></i></span> Planos</a>
+
+      <div class="nav-section-label">Programa</div>
+      <a class="nav-item" onclick="showPage('gamificacao');closeSidebar()" id="nav-gamificacao"><span class="nav-icon"><i data-lucide="sparkles"></i></span> Gamificação</a>
+      <a class="nav-item" onclick="showPage('temporadas');closeSidebar()" id="nav-temporadas"><span class="nav-icon"><i data-lucide="calendar-range"></i></span> Temporadas</a>
+      <a class="nav-item" onclick="showPage('campeonatos');closeSidebar()" id="nav-campeonatos"><span class="nav-icon"><i data-lucide="trophy"></i></span> Campeonatos</a>
+
+      <div class="nav-section-label">Plataforma</div>
+      <a class="nav-item" onclick="showPage('financeiro');closeSidebar()" id="nav-financeiro"><span class="nav-icon"><i data-lucide="banknote"></i></span> Financeiro</a>
+      <a class="nav-item" onclick="showPage('comunicacao');closeSidebar()" id="nav-comunicacao"><span class="nav-icon"><i data-lucide="megaphone"></i></span> Comunicação</a>
+
+      <div class="nav-section-label">Sistema</div>
+      <a class="nav-item" onclick="showPage('auditoria');closeSidebar()" id="nav-auditoria"><span class="nav-icon"><i data-lucide="shield-check"></i></span> Auditoria</a>
+      <a class="nav-item" onclick="showPage('config');closeSidebar()" id="nav-config"><span class="nav-icon"><i data-lucide="settings"></i></span> Configurações</a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn-logout" onclick="doLogout()"><i data-lucide="log-out"></i> Sair do Sistema</button>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="mobile-header">
+      <button class="hamburger" onclick="openSidebar()"><span></span><span></span><span></span></button>
+      <div class="mobile-logo"><span class="logo-local">Local</span><span class="logo-dot"></span><span class="logo-points">Points</span></div>
+      <div style="width:36px"></div>
+    </div>
+    <div class="topbar">
+      <div class="topbar-title" id="page-title">Dashboard</div>
+      <div class="status-dot">ADMIN</div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- DASHBOARD -->
+      <div id="page-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card accent"><div class="stat-label">Empresas Ativas</div><div class="stat-value" id="ds-empresas-ativas">0</div></div>
+          <div class="stat-card orange"><div class="stat-label">Pendentes</div><div class="stat-value" id="ds-empresas-pendentes">0</div></div>
+          <div class="stat-card teal"><div class="stat-label">Total de Empresas</div><div class="stat-value" id="ds-empresas-total">0</div></div>
+          <div class="stat-card violet"><div class="stat-label">Usuários</div><div class="stat-value" id="ds-usuarios">0</div></div>
+          <div class="stat-card accent"><div class="stat-label">Pontos Emitidos</div><div class="stat-value" id="ds-pontos-emitidos">0</div></div>
+          <div class="stat-card teal"><div class="stat-label">Pontos Resgatados</div><div class="stat-value" id="ds-pontos-resgatados">0</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="trophy"></i> Empresas mais ativas</div></div>
+          <div id="empresas-ativas-list"><div class="empty-state"><div class="empty-sub">Calculando...</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="rocket"></i> Fundação técnica ativa</div></div>
+          <p class="text-secondary" style="line-height:1.7">
+            Este é o painel administrativo do Local Points. Empresas, Usuários e
+            Auditoria já funcionam de ponta a ponta. Os módulos marcados como
+            <span class="badge badge-warning">em breve</span> no menu já têm o schema
+            do banco pronto (veja <code>ARQUITETURA.md</code>) e serão construídos nas
+            próximas fases.
+          </p>
+        </div>
+      </div>
+
+      <!-- USUÁRIOS -->
+      <div id="page-usuarios" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i data-lucide="users"></i> Usuários cadastrados</div>
+            <input type="text" id="usuarios-filtro" class="form-control" placeholder="Filtrar por nome ou e-mail" style="max-width:260px" oninput="renderUsuariosList()">
+          </div>
+          <div id="usuarios-list"><div class="empty-state"><div class="empty-title">Carregando...</div></div></div>
+        </div>
+      </div>
+
+      <!-- EMPRESAS -->
+      <div id="page-empresas" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i data-lucide="store"></i> Empresas cadastradas</div>
+            <button class="btn btn-primary btn-sm" onclick="openNewEmpresaModal()"><i data-lucide="plus"></i> Nova Empresa</button>
+          </div>
+          <div id="empresas-list"><div class="empty-state"><div class="empty-title">Carregando...</div></div></div>
+        </div>
+      </div>
+
+      <!-- PLANOS -->
+      <div id="page-planos" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i data-lucide="credit-card"></i> Planos</div>
+            <button class="btn btn-primary btn-sm" onclick="openNewPlanoModal()"><i data-lucide="plus"></i> Novo Plano</button>
+          </div>
+          <p class="text-secondary text-sm mb-12">Cada empresa é vinculada a um plano em <strong>Empresas → Editar</strong>. Os limites e módulos abaixo controlam o que fica disponível no painel da empresa.</p>
+          <div id="planos-list"><div class="empty-state"><div class="empty-title">Carregando...</div></div></div>
+        </div>
+      </div>
+
+      <!-- FINANCEIRO -->
+      <div id="page-financeiro" class="hidden">
+        <div class="stats-grid">
+          <div class="stat-card accent"><div class="stat-label">Receita Mensal Estimada</div><div class="stat-value" id="fin-receita-mensal">R$ 0,00</div></div>
+          <div class="stat-card teal"><div class="stat-label">Assinaturas Ativas</div><div class="stat-value" id="fin-assinaturas-ativas">0</div></div>
+          <div class="stat-card orange"><div class="stat-label">Inadimplentes</div><div class="stat-value" id="fin-inadimplentes">0</div></div>
+          <div class="stat-card red"><div class="stat-label">Sem Plano</div><div class="stat-value" id="fin-sem-plano">0</div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="alert-triangle"></i> Empresas com plano vencido</div></div>
+          <p class="text-secondary text-sm mb-12">Vencimento é definido em Empresas → Editar. Isso não bloqueia a empresa automaticamente — é só um alerta pra você decidir.</p>
+          <div id="fin-inadimplentes-list"><div class="empty-state"><div class="empty-sub">Nenhuma empresa inadimplente.</div></div></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="pie-chart"></i> Assinaturas por plano</div></div>
+          <div id="fin-por-plano-list"><div class="empty-state"><div class="empty-sub">Nenhum dado ainda.</div></div></div>
+        </div>
+      </div>
+
+      <!-- COMUNICAÇÃO -->
+      <div id="page-comunicacao" class="hidden">
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="megaphone"></i> Enviar notificação</div></div>
+          <div id="comunicacao-error" class="alert alert-danger hidden"></div>
+          <div class="form-group">
+            <label class="form-label">Enviar para</label>
+            <select id="com-alvo" class="form-control">
+              <option value="todos">Todos os usuários</option>
+            </select>
+          </div>
+          <div class="form-group"><label class="form-label">Título</label><input type="text" id="com-titulo" class="form-control" placeholder="Ex: Nova recompensa disponível!"></div>
+          <div class="form-group"><label class="form-label">Mensagem</label><input type="text" id="com-mensagem" class="form-control" placeholder="Escreva a mensagem"></div>
+          <button class="btn btn-primary" id="btn-enviar-comunicacao" onclick="enviarComunicacao()"><i data-lucide="send"></i> Enviar</button>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="history"></i> Histórico de envios</div></div>
+          <div id="comunicacao-historico-list"><div class="empty-state"><div class="empty-sub">Nenhum envio ainda.</div></div></div>
+        </div>
+      </div>
+
+      <!-- TEMPORADAS -->
+      <div id="page-temporadas" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i data-lucide="calendar-range"></i> Temporadas</div>
+            <button class="btn btn-primary btn-sm" onclick="openNewTemporadaModal()"><i data-lucide="plus"></i> Nova Temporada</button>
+          </div>
+          <div id="temporadas-list"><div class="empty-state"><div class="empty-title">Carregando...</div></div></div>
+        </div>
+      </div>
+
+      <!-- CAMPEONATOS -->
+      <div id="page-campeonatos" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i data-lucide="trophy"></i> Campeonatos</div>
+            <button class="btn btn-primary btn-sm" onclick="openNewCampeonatoModal()"><i data-lucide="plus"></i> Novo Campeonato</button>
+          </div>
+          <p class="text-secondary text-sm mb-12">Taxa de inscrição e recompensas são em <strong>XP</strong> — pontos são moeda de cada empresa, campeonatos são da plataforma toda.</p>
+          <div id="campeonatos-list"><div class="empty-state"><div class="empty-title">Carregando...</div></div></div>
+        </div>
+      </div>
+
+      <!-- GAMIFICAÇÃO -->
+      <div id="page-gamificacao" class="hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i data-lucide="stairs"></i> Níveis</div>
+            <button class="btn btn-primary btn-sm" onclick="openNewNivelModal()"><i data-lucide="plus"></i> Novo Nível</button>
+          </div>
+          <p class="text-secondary text-sm mb-12">Cada usuário ganha 1 XP para cada ponto recebido em qualquer empresa. O nível é calculado pelo XP total.</p>
+          <div id="niveis-list"><div class="empty-state"><div class="empty-title">Carregando...</div></div></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><i data-lucide="sparkles"></i> Conquistas</div>
+            <button class="btn btn-primary btn-sm" onclick="openNewConquistaModal()"><i data-lucide="plus"></i> Nova Conquista</button>
+          </div>
+          <p class="text-secondary text-sm mb-12">Desbloqueadas automaticamente quando o usuário atinge o critério — checado a cada lançamento de pontos ou resgate.</p>
+          <div id="conquistas-list"><div class="empty-state"><div class="empty-title">Carregando...</div></div></div>
+        </div>
+      </div>
+
+      <!-- MÓDULO EM CONSTRUÇÃO (genérico) -->
+      <div id="page-soon" class="hidden">
+        <div class="card">
+          <div class="empty-state">
+            <div class="empty-icon"><i data-lucide="hammer" id="soon-icon"></i></div>
+            <div class="empty-title" id="soon-title">Módulo em construção</div>
+            <div class="empty-sub">O schema deste módulo já existe no banco (veja ARQUITETURA.md) — a interface chega numa próxima fase.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AUDITORIA -->
+      <div id="page-auditoria" class="hidden">
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="shield-check"></i> Log de Auditoria</div></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Quando</th><th>Ação</th><th>Quem</th><th>Alvo</th></tr></thead>
+              <tbody id="audit-tbody"><tr><td colspan="4" class="text-center text-muted" style="padding:24px">Carregando...</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONFIGURAÇÕES -->
+      <div id="page-config" class="hidden">
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="settings"></i> Configurações da Plataforma</div></div>
+          <div class="form-group">
+            <label class="form-label">Nome da plataforma</label>
+            <input type="text" id="cfg-platform-name" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">E-mail de suporte</label>
+            <input type="email" id="cfg-support-email" class="form-control">
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Cor primária</label>
+              <input type="color" id="cfg-primary-color" class="form-control" style="height:44px">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Cor secundária</label>
+              <input type="color" id="cfg-secondary-color" class="form-control" style="height:44px">
+            </div>
+          </div>
+          <button class="btn btn-primary" onclick="saveSettings()">Salvar Configurações</button>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="image"></i> IMGDB — Hospedagem de imagens</div></div>
+          <div class="form-group">
+            <label class="form-label">Chave de API (api.imgbb.com)</label>
+            <input type="text" id="cfg-imgdb-key" class="form-control" placeholder="Cole a chave aqui">
+            <div class="form-hint">Visível apenas para admin e empresas — usuários nunca têm acesso a esta leitura.</div>
+          </div>
+          <button class="btn btn-primary" onclick="saveImgdbKey()">Salvar Chave</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- MODAL — Empresa (criar/editar) -->
+<div class="modal-overlay" id="modal-empresa">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <div class="modal-title" id="empresa-modal-title"><i data-lucide="store"></i> Nova Empresa</div>
+      <button class="modal-close" onclick="closeModal('modal-empresa')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="empresa-modal-error" class="alert alert-danger hidden"></div>
+      <input type="hidden" id="emp-id">
+      <div class="section-title">Dados da empresa</div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Nome</label><input type="text" id="emp-name" class="form-control"></div>
+        <div class="form-group"><label class="form-label">CNPJ</label><input type="text" id="emp-cnpj" class="form-control"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Categoria</label>
+          <select id="emp-category" class="form-control">
+            <option value="alimentacao">Alimentação</option>
+            <option value="vestuario">Vestuário</option>
+            <option value="beleza">Beleza e Estética</option>
+            <option value="saude">Saúde</option>
+            <option value="servicos">Serviços</option>
+            <option value="outros">Outros</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Telefone</label><input type="tel" id="emp-phone" class="form-control"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Descrição</label><input type="text" id="emp-description" class="form-control"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Cidade</label><input type="text" id="emp-city" class="form-control"></div>
+        <div class="form-group"><label class="form-label">Estado (UF)</label><input type="text" id="emp-state" class="form-control" maxlength="2" style="text-transform:uppercase"></div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-title" id="owner-section-title">Responsável (acesso ao painel da empresa)</div>
+      <div id="owner-fields">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Nome do responsável</label><input type="text" id="emp-owner-name" class="form-control"></div>
+          <div class="form-group"><label class="form-label">E-mail do responsável</label><input type="email" id="emp-owner-email" class="form-control"></div>
+        </div>
+        <div class="form-group"><label class="form-label">Senha inicial</label><input type="password" id="emp-owner-password" class="form-control" placeholder="Mínimo 6 caracteres"></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Status inicial</label>
+        <select id="emp-status" class="form-control">
+          <option value="ativo">Ativo</option>
+          <option value="pendente">Pendente</option>
+        </select>
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-title">Plano</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Plano</label>
+          <select id="emp-plano" class="form-control">
+            <option value="">Sem plano</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Vencimento</label><input type="date" id="emp-plano-vencimento" class="form-control"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-empresa')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-empresa" onclick="saveEmpresa()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL — Nível -->
+<div class="modal-overlay" id="modal-nivel">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="nivel-modal-title"><i data-lucide="stairs"></i> Novo Nível</div>
+      <button class="modal-close" onclick="closeModal('modal-nivel')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="nivel-modal-error" class="alert alert-danger hidden"></div>
+      <input type="hidden" id="niv-id">
+      <div class="form-group"><label class="form-label">Nome do nível</label><input type="text" id="niv-nome" class="form-control" placeholder="Ex: Bronze, Prata, Ouro..."></div>
+      <div class="form-group"><label class="form-label">XP necessário</label><input type="number" min="0" id="niv-xp" class="form-control"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-nivel')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-nivel" onclick="saveNivel()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL — Conquista -->
+<div class="modal-overlay" id="modal-conquista">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="conquista-modal-title"><i data-lucide="sparkles"></i> Nova Conquista</div>
+      <button class="modal-close" onclick="closeModal('modal-conquista')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="conquista-modal-error" class="alert alert-danger hidden"></div>
+      <input type="hidden" id="conq-id">
+      <div class="form-group"><label class="form-label">Nome</label><input type="text" id="conq-nome" class="form-control" placeholder="Ex: Primeira Compra"></div>
+      <div class="form-group"><label class="form-label">Descrição</label><input type="text" id="conq-descricao" class="form-control"></div>
+      <div class="form-group">
+        <label class="form-label">Ícone (nome do ícone Lucide)</label>
+        <input type="text" id="conq-icone" class="form-control" placeholder="Ex: star, trophy, flame, medal...">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Critério</label>
+          <select id="conq-criterio-tipo" class="form-control">
+            <option value="nivel_minimo">Nível mínimo alcançado</option>
+            <option value="total_pontos_minimo">Total de pontos ganhos (todas empresas)</option>
+            <option value="total_resgates_minimo">Total de resgates realizados</option>
+            <option value="streak_minimo">Dias consecutivos ativos (streak)</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Valor</label><input type="number" min="1" id="conq-criterio-valor" class="form-control"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-conquista')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-conquista" onclick="saveConquista()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL — Plano -->
+<div class="modal-overlay" id="modal-plano">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="plano-modal-title"><i data-lucide="credit-card"></i> Novo Plano</div>
+      <button class="modal-close" onclick="closeModal('modal-plano')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="plano-modal-error" class="alert alert-danger hidden"></div>
+      <input type="hidden" id="plano-id">
+      <div class="form-group"><label class="form-label">Nome do plano</label><input type="text" id="plano-nome" class="form-control" placeholder="Ex: Básico, Profissional, Premium"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Preço mensal (R$)</label><input type="number" step="0.01" min="0" id="plano-preco-mensal" class="form-control"></div>
+        <div class="form-group"><label class="form-label">Preço anual (R$)</label><input type="number" step="0.01" min="0" id="plano-preco-anual" class="form-control"></div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-title">Limites</div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Máx. funcionários</label><input type="number" min="0" id="plano-max-funcionarios" class="form-control"><div class="form-hint">0 = ilimitado (não conta o dono)</div></div>
+        <div class="form-group"><label class="form-label">Máx. recompensas</label><input type="number" min="0" id="plano-max-recompensas" class="form-control"><div class="form-hint">0 = ilimitado</div></div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-title">Módulos liberados</div>
+      <div class="form-group"><label class="form-label d-flex align-center gap-6"><input type="checkbox" id="plano-feat-promocoes" style="width:16px;height:16px"> Promoções</label></div>
+      <div class="form-group"><label class="form-label d-flex align-center gap-6"><input type="checkbox" id="plano-feat-cashback" style="width:16px;height:16px"> Cashback</label></div>
+      <div class="form-group"><label class="form-label d-flex align-center gap-6"><input type="checkbox" id="plano-feat-relatorios" style="width:16px;height:16px"> Relatórios avançados</label></div>
+
+      <div class="divider"></div>
+      <div class="form-group"><label class="form-label d-flex align-center gap-6"><input type="checkbox" id="plano-ativo" style="width:16px;height:16px" checked> Plano ativo (visível pra atribuir a empresas)</label></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-plano')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-plano" onclick="savePlano()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL — Temporada -->
+<div class="modal-overlay" id="modal-temporada">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="temporada-modal-title"><i data-lucide="calendar-range"></i> Nova Temporada</div>
+      <button class="modal-close" onclick="closeModal('modal-temporada')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="temporada-modal-error" class="alert alert-danger hidden"></div>
+      <input type="hidden" id="temp-id">
+      <div class="form-group">
+        <label class="form-label">Banner</label>
+        <div class="d-flex gap-12 align-center">
+          <img id="temp-banner-preview" src="" alt="" style="width:56px;height:56px;border-radius:12px;object-fit:cover;background:var(--bg-3);display:none">
+          <input type="file" id="temp-banner-file" accept="image/*" class="form-control">
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Nome</label><input type="text" id="temp-nome" class="form-control" placeholder="Ex: Temporada 2026"></div>
+      <div class="form-group"><label class="form-label">Descrição</label><input type="text" id="temp-descricao" class="form-control"></div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Início</label><input type="date" id="temp-inicio" class="form-control"></div>
+        <div class="form-group"><label class="form-label">Fim</label><input type="date" id="temp-fim" class="form-control"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Status</label>
+        <select id="temp-status" class="form-control">
+          <option value="futura">Futura</option>
+          <option value="ativa">Ativa</option>
+          <option value="encerrada">Encerrada</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-temporada')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-temporada" onclick="saveTemporada()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL — Campeonato (criar/editar) -->
+<div class="modal-overlay" id="modal-campeonato">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <div class="modal-title" id="campeonato-modal-title"><i data-lucide="trophy"></i> Novo Campeonato</div>
+      <button class="modal-close" onclick="closeModal('modal-campeonato')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="campeonato-modal-error" class="alert alert-danger hidden"></div>
+      <input type="hidden" id="camp-id">
+      <div class="form-group">
+        <label class="form-label">Banner</label>
+        <div class="d-flex gap-12 align-center">
+          <img id="camp-banner-preview" src="" alt="" style="width:56px;height:56px;border-radius:12px;object-fit:cover;background:var(--bg-3);display:none">
+          <input type="file" id="camp-banner-file" accept="image/*" class="form-control">
+        </div>
+      </div>
+      <div class="form-group"><label class="form-label">Nome</label><input type="text" id="camp-nome" class="form-control"></div>
+      <div class="form-group"><label class="form-label">Descrição</label><input type="text" id="camp-descricao" class="form-control"></div>
+      <div class="form-group">
+        <label class="form-label">Temporada (opcional)</label>
+        <select id="camp-temporada" class="form-control"><option value="">Sem temporada</option></select>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Fim das inscrições</label><input type="date" id="camp-data-inicio" class="form-control"></div>
+        <div class="form-group"><label class="form-label">Data de encerramento (informativa)</label><input type="date" id="camp-data-fim" class="form-control"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Máx. participantes</label>
+          <select id="camp-max-participantes" class="form-control">
+            <option value="4">4 (semifinal + final)</option>
+            <option value="8">8 (quartas + semi + final)</option>
+            <option value="16">16 (oitavas + quartas + semi + final)</option>
+            <option value="32">32 (dezesseisavos + oitavas + quartas + semi + final)</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Taxa de inscrição (XP)</label><input type="number" min="0" id="camp-taxa-xp" class="form-control" value="0"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Recompensa do campeão (XP)</label><input type="number" min="0" id="camp-recompensa-campeao" class="form-control" value="200"></div>
+        <div class="form-group"><label class="form-label">Recompensa do vice (XP)</label><input type="number" min="0" id="camp-recompensa-vice" class="form-control" value="80"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Regulamento</label><input type="text" id="camp-regulamento" class="form-control" placeholder="Regras do campeonato"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-campeonato')">Cancelar</button>
+      <button class="btn btn-primary" id="btn-save-campeonato" onclick="saveCampeonato()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL — Gerenciar Campeonato (participantes + chaveamento) -->
+<div class="modal-overlay" id="modal-gerenciar-campeonato">
+  <div class="modal modal-wide">
+    <div class="modal-header">
+      <div class="modal-title" id="gerenciar-campeonato-titulo"><i data-lucide="trophy"></i> Campeonato</div>
+      <button class="modal-close" onclick="closeModal('modal-gerenciar-campeonato')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="gerenciar-campeonato-status" class="alert alert-info"></div>
+
+      <div id="gerenciar-participantes-bloco">
+        <div class="section-title">Participantes inscritos (<span id="gc-participantes-count">0</span>/<span id="gc-participantes-max">0</span>)</div>
+        <div id="gc-participantes-list" class="mb-16"></div>
+        <button class="btn btn-primary btn-block" id="btn-sortear" onclick="sortearChaveamento()"><i data-lucide="shuffle"></i> Sortear Chaveamento</button>
+      </div>
+
+      <div id="gerenciar-bracket-bloco" class="hidden">
+        <div class="section-title">Chaveamento</div>
+        <div id="gc-bracket"></div>
+      </div>
+
+      <div id="gerenciar-resultado-bloco" class="hidden">
+        <div class="alert alert-success" id="gc-resultado-msg"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('modal-gerenciar-campeonato')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+let currentAdmin = null;
+let empresasCache = {};
+
+// ── Boot ──
+auth.onAuthStateChanged(async user => {
+  if (!user) { window.location.replace('../index.html'); return; }
+  try {
+    const snap = await db.ref('users/' + user.uid).once('value');
+    const ud = snap.val();
+    if (!ud || ud.role !== 'admin') { window.location.replace('../index.html'); return; }
+
+    currentAdmin = { uid: user.uid, name: ud.name, email: ud.email, role: 'admin' };
+    window._auditActor = currentAdmin;
+    document.getElementById('admin-name').textContent = ud.name || ud.email;
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    renderIcons();
+    loadAll();
+  } catch (e) {
+    window.location.replace('../index.html');
+  }
+});
+
+function renderIcons() { if (window.lucide) lucide.createIcons(); }
+
+async function doLogout() {
+  if (window.ensureSWReady) await ensureSWReady();
+  await auth.signOut();
+  window.location.replace('../index.html');
+}
+
+function openSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sidebar-overlay').classList.add('show'); }
+function closeSidebar() { document.getElementById('sidebar').classList.remove('open'); document.getElementById('sidebar-overlay').classList.remove('show'); }
+
+function showToast(msg, type = 'info') {
+  const c = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.textContent = msg;
+  t.onclick = () => t.remove();
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 4500);
+}
+
+const PAGE_TITLES = { dashboard: 'Dashboard', empresas: 'Empresas', usuarios: 'Usuários', planos: 'Planos', financeiro: 'Financeiro', comunicacao: 'Comunicação', temporadas: 'Temporadas', campeonatos: 'Campeonatos', gamificacao: 'Gamificação', auditoria: 'Auditoria', config: 'Configurações' };
+
+function showPage(id) {
+  ['dashboard', 'empresas', 'usuarios', 'planos', 'financeiro', 'comunicacao', 'temporadas', 'campeonatos', 'gamificacao', 'soon', 'auditoria', 'config'].forEach(p => {
+    document.getElementById('page-' + p).classList.toggle('hidden', p !== id);
+  });
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navEl = document.getElementById('nav-' + id);
+  if (navEl) navEl.classList.add('active');
+  document.getElementById('page-title').textContent = PAGE_TITLES[id] || id;
+
+  if (id === 'auditoria') loadAuditLogs();
+  if (id === 'config') loadSettings();
+  if (id === 'usuarios') loadUsuarios();
+  if (id === 'planos') loadPlanos();
+  if (id === 'financeiro') loadFinanceiro();
+  if (id === 'comunicacao') loadComunicacaoHistorico();
+  if (id === 'temporadas') loadTemporadas();
+  if (id === 'campeonatos') loadCampeonatos();
+  if (id === 'gamificacao') { loadNiveis(); loadConquistas(); }
+}
+
+function showSoon(label, icon) {
+  showPage('soon');
+  document.getElementById('page-title').textContent = label;
+  document.getElementById('soon-title').textContent = label + ' — em construção';
+  const iconEl = document.getElementById('soon-icon');
+  iconEl.setAttribute('data-lucide', icon || 'hammer');
+  renderIcons();
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+async function loadAll() {
+  await loadEmpresas();
+  await loadDashboardCounts();
+}
+
+// ── DASHBOARD ──
+async function loadDashboardCounts() {
+  const empresaIds = Object.keys(empresasCache);
+  const empresas = Object.values(empresasCache);
+  document.getElementById('ds-empresas-ativas').textContent    = empresas.filter(e => e.status === 'ativo').length;
+  document.getElementById('ds-empresas-pendentes').textContent = empresas.filter(e => e.status === 'pendente').length;
+  document.getElementById('ds-empresas-total').textContent     = empresas.length;
+
+  try {
+    const usnap = await db.ref('users').orderByChild('role').equalTo('usuario').once('value');
+    document.getElementById('ds-usuarios').textContent = usnap.exists() ? Object.keys(usnap.val()).length : 0;
+  } catch (e) {
+    document.getElementById('ds-usuarios').textContent = '—';
+  }
+
+  // Pontos emitidos/resgatados e ranking de empresas mais ativas.
+  // NOTA: isso lê /pontos/lancamentos e /resgates de TODAS as empresas a cada
+  // carga do dashboard — ok na escala da Fundação, mas não escala para milhares
+  // de empresas. Quando isso virar um problema real, o certo é manter contadores
+  // já somados (ex: /empresas/{id}/totais) atualizados por Cloud Function a cada
+  // lançamento, em vez de recalcular tudo no client. Ver ARQUITETURA.md.
+  const listEl = document.getElementById('empresas-ativas-list');
+  if (!empresaIds.length) {
+    document.getElementById('ds-pontos-emitidos').textContent = 0;
+    document.getElementById('ds-pontos-resgatados').textContent = 0;
+    listEl.innerHTML = '<div class="empty-state"><div class="empty-sub">Nenhuma empresa cadastrada ainda.</div></div>';
+    return;
+  }
+
+  try {
+    const [lancSnaps, resgSnaps] = await Promise.all([
+      Promise.all(empresaIds.map(id => db.ref('pontos/lancamentos/' + id).once('value'))),
+      Promise.all(empresaIds.map(id => db.ref('resgates/' + id).once('value')))
+    ]);
+
+    let totalEmitidos = 0, totalResgatados = 0;
+    const atividade = {};
+
+    lancSnaps.forEach((snap, i) => {
+      const id = empresaIds[i];
+      let count = 0;
+      snap.forEach(c => {
+        const l = c.val();
+        if (l.tipo === 'credito') totalEmitidos += l.quantidade || 0;
+        if (l.tipo === 'estorno') totalEmitidos -= l.quantidade || 0;
+        count++;
+      });
+      atividade[id] = (atividade[id] || 0) + count;
+    });
+
+    resgSnaps.forEach((snap, i) => {
+      const id = empresaIds[i];
+      snap.forEach(c => {
+        const r = c.val();
+        if (r.status === 'entregue') totalResgatados += r.pontosGastos || 0;
+      });
+    });
+
+    document.getElementById('ds-pontos-emitidos').textContent = totalEmitidos;
+    document.getElementById('ds-pontos-resgatados').textContent = totalResgatados;
+
+    const ranked = empresaIds
+      .map(id => ({ id, nome: empresasCache[id].name, atividade: atividade[id] || 0 }))
+      .sort((a, b) => b.atividade - a.atividade)
+      .filter(e => e.atividade > 0)
+      .slice(0, 5);
+
+    listEl.innerHTML = ranked.length ? ranked.map((e, i) => `
+      <div class="entity-card ativo">
+        <div>
+          <div class="entity-name">#${i + 1} ${esc(e.nome)}</div>
+          <div class="entity-sub">${e.atividade} lançamento(s)</div>
+        </div>
+      </div>`).join('') : '<div class="empty-state"><div class="empty-sub">Nenhum lançamento de pontos ainda.</div></div>';
+    renderIcons();
+  } catch (e) {
+    listEl.innerHTML = `<div class="empty-state"><div class="empty-sub">Erro ao calcular: ${esc(e.message)}</div></div>`;
+  }
+}
+
+// ── USUÁRIOS ──
+let usuariosCache = {};
+
+async function loadUsuarios() {
+  const el = document.getElementById('usuarios-list');
+  try {
+    const snap = await db.ref('users').orderByChild('role').equalTo('usuario').once('value');
+    usuariosCache = snap.val() || {};
+    renderUsuariosList();
+  } catch (e) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-sub">Erro: ${esc(e.message)}</div></div>`;
+  }
+}
+
+function renderUsuariosList() {
+  const filtro = (document.getElementById('usuarios-filtro').value || '').toLowerCase();
+  const el = document.getElementById('usuarios-list');
+  let ids = Object.keys(usuariosCache);
+  if (filtro) {
+    ids = ids.filter(id => {
+      const u = usuariosCache[id];
+      return (u.name || '').toLowerCase().includes(filtro) || (u.email || '').toLowerCase().includes(filtro);
+    });
+  }
+  if (!ids.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon"><i data-lucide="users"></i></div><div class="empty-title">Nenhum usuário encontrado</div></div>';
+    renderIcons();
+    return;
+  }
+  ids.sort((a, b) => (usuariosCache[b].createdAt || 0) - (usuariosCache[a].createdAt || 0));
+  el.innerHTML = ids.map(id => {
+    const u = usuariosCache[id];
+    return `
+      <div class="entity-card ${u.status === 'bloqueado' ? 'bloqueado' : 'ativo'}">
+        <div>
+          <div class="entity-name">${esc(u.name || u.email)} ${u.status === 'bloqueado' ? '<span class="badge badge-danger">bloqueado</span>' : '<span class="badge badge-active">ativo</span>'}</div>
+          <div class="entity-sub">${esc(u.email || '')} · ${esc(u.phone || 'sem telefone')} · desde ${esc(formatDate(u.createdAt))}</div>
+        </div>
+        <div class="entity-actions">
+          ${u.status === 'bloqueado'
+            ? `<button class="btn btn-success btn-sm" onclick="toggleUsuarioStatus('${id}','ativo')"><i data-lucide="unlock"></i> Desbloquear</button>`
+            : `<button class="btn btn-warning btn-sm" onclick="toggleUsuarioStatus('${id}','bloqueado')"><i data-lucide="lock"></i> Bloquear</button>`}
+        </div>
+      </div>`;
+  }).join('');
+  renderIcons();
+}
+
+async function toggleUsuarioStatus(uid, novoStatus) {
+  const u = usuariosCache[uid];
+  if (!u) return;
+  if (!confirm(`Confirma ${novoStatus === 'ativo' ? 'desbloquear' : 'bloquear'} ${u.name || u.email}?`)) return;
+  try {
+    await db.ref('users/' + uid + '/status').set(novoStatus);
+    await auditLog('usuario.status', { type: 'usuario', id: uid, label: u.name || u.email }, { status: novoStatus });
+    showToast('Status atualizado.', 'success');
+    loadUsuarios();
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+// ── EMPRESAS ──
+async function loadEmpresas() {
+  try {
+    const snap = await db.ref('empresas').once('value');
+    empresasCache = snap.val() || {};
+    renderEmpresasList();
+  } catch (e) {
+    document.getElementById('empresas-list').innerHTML = `<div class="empty-state"><div class="empty-title">Erro ao carregar</div><div class="empty-sub">${esc(e.message)}</div></div>`;
+  }
+}
+
+function statusBadge(status) {
+  const map = {
+    ativo:     'badge-active',
+    pendente:  'badge-warning',
+    suspenso:  'badge-danger',
+    cancelado: 'badge-closed'
+  };
+  return `<span class="badge ${map[status] || 'badge-closed'}">${esc(STATUS_LABELS[status] || status)}</span>`;
+}
+
+function renderEmpresasList() {
+  const ids = Object.keys(empresasCache);
+  const el = document.getElementById('empresas-list');
+  if (!ids.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon"><i data-lucide="store"></i></div><div class="empty-title">Nenhuma empresa cadastrada</div><div class="empty-sub">Clique em "Nova Empresa" para começar.</div></div>`;
+    renderIcons();
+    return;
+  }
+  ids.sort((a, b) => (empresasCache[b].createdAt || 0) - (empresasCache[a].createdAt || 0));
+  el.innerHTML = ids.map(id => {
+    const e = empresasCache[id];
+    return `
+      <div class="entity-card ${esc(e.status)}">
+        <div>
+          <div class="entity-name">${esc(e.name)} ${statusBadge(e.status)}</div>
+          <div class="entity-sub">${esc(e.category || '—')} · ${esc(e.address?.city || '')}${e.address?.state ? '/' + esc(e.address.state) : ''} · ${esc(e.email || '')}</div>
+        </div>
+        <div class="entity-actions">
+          ${e.status === 'pendente' ? `<button class="btn btn-success btn-sm" onclick="setEmpresaStatus('${id}','ativo')"><i data-lucide="check"></i> Aprovar</button>` : ''}
+          ${e.status === 'ativo' ? `<button class="btn btn-warning btn-sm" onclick="setEmpresaStatus('${id}','suspenso')"><i data-lucide="pause"></i> Suspender</button>` : ''}
+          ${e.status === 'suspenso' ? `<button class="btn btn-success btn-sm" onclick="setEmpresaStatus('${id}','ativo')"><i data-lucide="play"></i> Reativar</button>` : ''}
+          ${e.status !== 'cancelado' ? `<button class="btn btn-danger btn-sm" onclick="setEmpresaStatus('${id}','cancelado')"><i data-lucide="ban"></i> Cancelar</button>` : ''}
+          <button class="btn btn-ghost btn-sm" onclick="openEditEmpresa('${id}')"><i data-lucide="pencil"></i></button>
+        </div>
+      </div>`;
+  }).join('');
+  renderIcons();
+}
+
+async function populateEmpresaPlanoSelect(selectedPlanoId) {
+  if (!Object.keys(planosCache).length) {
+    const snap = await db.ref('planos').once('value');
+    planosCache = snap.val() || {};
+  }
+  const sel = document.getElementById('emp-plano');
+  const ativos = Object.entries(planosCache).filter(([, p]) => p.ativo !== false);
+  sel.innerHTML = '<option value="">Sem plano</option>' +
+    ativos.map(([id, p]) => `<option value="${id}">${esc(p.nome)}</option>`).join('');
+  sel.value = selectedPlanoId || '';
+}
+
+function openNewEmpresaModal() {
+  document.getElementById('empresa-modal-title').innerHTML = '<i data-lucide="store"></i> Nova Empresa';
+  document.getElementById('emp-id').value = '';
+  ['emp-name','emp-cnpj','emp-phone','emp-description','emp-city','emp-state','emp-owner-name','emp-owner-email','emp-owner-password','emp-plano-vencimento']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('emp-category').value = 'alimentacao';
+  document.getElementById('emp-status').value = 'ativo';
+  document.getElementById('owner-fields').classList.remove('hidden');
+  document.getElementById('empresa-modal-error').classList.add('hidden');
+  populateEmpresaPlanoSelect();
+  openModal('modal-empresa');
+  renderIcons();
+}
+
+function openEditEmpresa(id) {
+  const e = empresasCache[id];
+  if (!e) return;
+  document.getElementById('empresa-modal-title').innerHTML = '<i data-lucide="store"></i> Editar Empresa';
+  document.getElementById('emp-id').value = id;
+  document.getElementById('emp-name').value = e.name || '';
+  document.getElementById('emp-cnpj').value = e.cnpj || '';
+  document.getElementById('emp-category').value = e.category || 'outros';
+  document.getElementById('emp-phone').value = e.phone || '';
+  document.getElementById('emp-description').value = e.description || '';
+  document.getElementById('emp-city').value = e.address?.city || '';
+  document.getElementById('emp-state').value = e.address?.state || '';
+  document.getElementById('emp-status').value = e.status || 'ativo';
+  document.getElementById('emp-plano-vencimento').value = e.planExpiresAt ? new Date(e.planExpiresAt).toISOString().slice(0, 10) : '';
+  document.getElementById('owner-fields').classList.add('hidden'); // dono não muda por aqui
+  document.getElementById('empresa-modal-error').classList.add('hidden');
+  populateEmpresaPlanoSelect(e.planId);
+  openModal('modal-empresa');
+  renderIcons();
+}
+
+async function saveEmpresa() {
+  const id       = document.getElementById('emp-id').value;
+  const name     = document.getElementById('emp-name').value.trim();
+  const cnpj     = document.getElementById('emp-cnpj').value.trim();
+  const category = document.getElementById('emp-category').value;
+  const phone    = document.getElementById('emp-phone').value.trim();
+  const description = document.getElementById('emp-description').value.trim();
+  const city     = document.getElementById('emp-city').value.trim();
+  const state    = document.getElementById('emp-state').value.trim().toUpperCase();
+  const status   = document.getElementById('emp-status').value;
+  const planId   = document.getElementById('emp-plano').value || null;
+  const planVencimentoStr = document.getElementById('emp-plano-vencimento').value;
+  const planExpiresAt = planVencimentoStr ? new Date(planVencimentoStr + 'T23:59:59').getTime() : null;
+  const errEl    = document.getElementById('empresa-modal-error');
+  const btn      = document.getElementById('btn-save-empresa');
+
+  errEl.classList.add('hidden');
+  if (!name) { errEl.textContent = '⚠ Informe o nome da empresa.'; errEl.classList.remove('hidden'); return; }
+
+  btn.disabled = true; btn.textContent = 'Salvando...';
+  try {
+    if (id) {
+      // edição
+      await db.ref('empresas/' + id).update({ name, cnpj, category, phone, description, address: { city, state }, planId, planExpiresAt });
+      await auditLog('empresa.editar', { type: 'empresa', id, label: name }, { planId });
+      showToast('Empresa atualizada.', 'success');
+    } else {
+      // criação — precisa também da conta do responsável
+      const ownerName     = document.getElementById('emp-owner-name').value.trim();
+      const ownerEmail    = document.getElementById('emp-owner-email').value.trim();
+      const ownerPassword = document.getElementById('emp-owner-password').value;
+      if (!ownerName || !ownerEmail || !ownerPassword) {
+        throw new Error('Preencha nome, e-mail e senha do responsável pela empresa.');
+      }
+      if (ownerPassword.length < 6) throw new Error('Senha do responsável deve ter no mínimo 6 caracteres.');
+
+      const empresaId = db.ref('empresas').push().key;
+      const ownerUid   = await createFirebaseUser(ownerEmail, ownerPassword);
+
+      const empresaData = {
+        name, cnpj, category, phone, description,
+        address: { city, state },
+        email: ownerEmail,
+        status,
+        planId, planExpiresAt,
+        ownerId: ownerUid,
+        createdAt: Date.now(),
+        loyaltyRules: { pointsPerCurrency: 1, minValue: 0, pointsValidityDays: 365 },
+        cashback: { enabled: false, percent: 0 }
+      };
+      if (status === 'ativo') { empresaData.approvedAt = Date.now(); empresaData.approvedBy = currentAdmin.uid; }
+
+      await db.ref('empresas/' + empresaId).set(empresaData);
+      await db.ref('users/' + ownerUid).set({
+        role: 'empresa', status: 'ativo', isOwner: true, empresaId,
+        name: ownerName, email: ownerEmail, createdAt: Date.now()
+      });
+      await db.ref('funcionarios/' + empresaId + '/' + ownerUid).set({
+        nome: ownerName, status: 'ativo', isOwner: true,
+        permissions: { lancarPontos: true, resgatarRecompensas: true, gerenciarClientes: true, gerenciarRecompensas: true }
+      });
+
+      await auditLog('empresa.criar', { type: 'empresa', id: empresaId, label: name }, { status, ownerEmail });
+      showToast('Empresa cadastrada.', 'success');
+    }
+    closeModal('modal-empresa');
+    await loadEmpresas();
+    await loadDashboardCounts();
+  } catch (e) {
+    errEl.textContent = '⚠ ' + e.message;
+    errEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Salvar';
+  }
+}
+
+async function setEmpresaStatus(id, status) {
+  const e = empresasCache[id];
+  if (!e) return;
+  const labels = { ativo: 'aprovar/ativar', suspenso: 'suspender', cancelado: 'cancelar' };
+  if (!confirm(`Confirma ${labels[status] || status} a empresa "${e.name}"?`)) return;
+
+  try {
+    const updates = { status };
+    if (status === 'ativo' && e.status === 'pendente') {
+      updates.approvedAt = Date.now();
+      updates.approvedBy = currentAdmin.uid;
+    }
+    await db.ref('empresas/' + id).update(updates);
+    await auditLog('empresa.status', { type: 'empresa', id, label: e.name }, { de: e.status, para: status });
+    showToast('Status atualizado.', 'success');
+    await loadEmpresas();
+    await loadDashboardCounts();
+  } catch (err) {
+    showToast('Erro: ' + err.message, 'error');
+  }
+}
+
+// ── AUDITORIA ──
+async function loadAuditLogs() {
+  const tbody = document.getElementById('audit-tbody');
+  try {
+    const snap = await db.ref('audit_logs').orderByChild('timestamp').limitToLast(100).once('value');
+    const logs = [];
+    snap.forEach(c => logs.push(c.val()));
+    logs.reverse();
+    if (!logs.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted" style="padding:24px">Nenhum registro ainda.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = logs.map(l => `
+      <tr>
+        <td data-label="Quando">${esc(l.datetime || formatDateTime(l.timestamp))}</td>
+        <td data-label="Ação"><span class="badge badge-accent">${esc(l.action)}</span></td>
+        <td data-label="Quem">${esc(l.actor?.name || '—')} <span class="text-muted text-xs">(${esc(l.actor?.role || '')})</span></td>
+        <td data-label="Alvo">${esc(l.target?.label || l.target?.type || '—')}</td>
+      </tr>`).join('');
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted" style="padding:24px">Erro ao carregar: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+// ── CONFIGURAÇÕES ──
+async function loadSettings() {
+  try {
+    const pubSnap = await db.ref('settings/public').once('value');
+    const pub = pubSnap.val() || {};
+    document.getElementById('cfg-platform-name').value = pub.platformName || 'Local Points';
+    document.getElementById('cfg-support-email').value = pub.supportEmail || '';
+    document.getElementById('cfg-primary-color').value = pub.primaryColor || '#F2C265';
+    document.getElementById('cfg-secondary-color').value = pub.secondaryColor || '#7FD8BE';
+  } catch (e) {}
+  try {
+    const intSnap = await db.ref('settings/integrations/imgdbApiKey').once('value');
+    document.getElementById('cfg-imgdb-key').value = intSnap.val() || '';
+  } catch (e) {}
+}
+
+async function saveSettings() {
+  try {
+    await db.ref('settings/public').update({
+      platformName: document.getElementById('cfg-platform-name').value.trim() || 'Local Points',
+      supportEmail: document.getElementById('cfg-support-email').value.trim(),
+      primaryColor: document.getElementById('cfg-primary-color').value,
+      secondaryColor: document.getElementById('cfg-secondary-color').value,
+      updatedAt: Date.now()
+    });
+    await auditLog('config.plataforma', { type: 'settings', label: 'Configurações gerais' }, {});
+    showToast('Configurações salvas.', 'success');
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+async function saveImgdbKey() {
+  try {
+    const key = document.getElementById('cfg-imgdb-key').value.trim();
+    await db.ref('settings/integrations/imgdbApiKey').set(key);
+    await auditLog('config.imgdb', { type: 'settings', label: 'Chave IMGDB' }, {});
+    showToast('Chave do IMGDB salva.', 'success');
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// PLANOS — CRUD
+// ══════════════════════════════════════════════════════
+let planosCache = {};
+
+async function loadPlanos() {
+  const el = document.getElementById('planos-list');
+  try {
+    const snap = await db.ref('planos').once('value');
+    planosCache = snap.val() || {};
+    renderPlanosList();
+  } catch (e) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-sub">Erro: ${esc(e.message)}</div></div>`;
+  }
+}
+
+function renderPlanosList() {
+  const ids = Object.keys(planosCache);
+  const el = document.getElementById('planos-list');
+  if (!ids.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon"><i data-lucide="credit-card"></i></div><div class="empty-title">Nenhum plano cadastrado</div><div class="empty-sub">Clique em "Novo Plano" para começar.</div></div>';
+    renderIcons();
+    return;
+  }
+  el.innerHTML = ids.map(id => {
+    const p = planosCache[id];
+    const feats = Object.entries({ promocoes: 'Promoções', cashback: 'Cashback', relatoriosAvancados: 'Relatórios avançados' })
+      .filter(([k]) => p.features?.[k]).map(([, label]) => `<span class="badge badge-teal">${label}</span>`).join(' ') || '<span class="text-muted text-sm">nenhum módulo extra</span>';
+    return `
+      <div class="entity-card ${p.ativo ? 'ativo' : 'suspenso'}">
+        <div>
+          <div class="entity-name">${esc(p.nome)} ${p.ativo ? '' : '<span class="badge badge-closed">inativo</span>'}</div>
+          <div class="entity-sub">${formatCurrency(p.precoMensal)}/mês · ${formatCurrency(p.precoAnual)}/ano · até ${p.limites?.maxFuncionarios || 0 ? p.limites.maxFuncionarios : '∞'} funcionário(s), ${p.limites?.maxRecompensas || 0 ? p.limites.maxRecompensas : '∞'} recompensa(s)</div>
+          <div class="mt-8">${feats}</div>
+        </div>
+        <div class="entity-actions">
+          <button class="btn btn-ghost btn-sm" onclick="openEditPlano('${id}')"><i data-lucide="pencil"></i></button>
+        </div>
+      </div>`;
+  }).join('');
+  renderIcons();
+}
+
+function openNewPlanoModal() {
+  document.getElementById('plano-modal-title').innerHTML = '<i data-lucide="credit-card"></i> Novo Plano';
+  document.getElementById('plano-id').value = '';
+  document.getElementById('plano-nome').value = '';
+  document.getElementById('plano-preco-mensal').value = '';
+  document.getElementById('plano-preco-anual').value = '';
+  document.getElementById('plano-max-funcionarios').value = 0;
+  document.getElementById('plano-max-recompensas').value = 0;
+  document.getElementById('plano-feat-promocoes').checked = false;
+  document.getElementById('plano-feat-cashback').checked = false;
+  document.getElementById('plano-feat-relatorios').checked = false;
+  document.getElementById('plano-ativo').checked = true;
+  document.getElementById('plano-modal-error').classList.add('hidden');
+  openModal('modal-plano');
+}
+
+function openEditPlano(id) {
+  const p = planosCache[id];
+  if (!p) return;
+  document.getElementById('plano-modal-title').innerHTML = '<i data-lucide="credit-card"></i> Editar Plano';
+  document.getElementById('plano-id').value = id;
+  document.getElementById('plano-nome').value = p.nome || '';
+  document.getElementById('plano-preco-mensal').value = p.precoMensal ?? '';
+  document.getElementById('plano-preco-anual').value = p.precoAnual ?? '';
+  document.getElementById('plano-max-funcionarios').value = p.limites?.maxFuncionarios ?? 0;
+  document.getElementById('plano-max-recompensas').value = p.limites?.maxRecompensas ?? 0;
+  document.getElementById('plano-feat-promocoes').checked = !!p.features?.promocoes;
+  document.getElementById('plano-feat-cashback').checked = !!p.features?.cashback;
+  document.getElementById('plano-feat-relatorios').checked = !!p.features?.relatoriosAvancados;
+  document.getElementById('plano-ativo').checked = p.ativo !== false;
+  document.getElementById('plano-modal-error').classList.add('hidden');
+  openModal('modal-plano');
+}
+
+async function savePlano() {
+  const errEl = document.getElementById('plano-modal-error');
+  const btn = document.getElementById('btn-save-plano');
+  errEl.classList.add('hidden');
+  try {
+    const id = document.getElementById('plano-id').value;
+    const nome = document.getElementById('plano-nome').value.trim();
+    if (!nome) throw new Error('Informe o nome do plano.');
+
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    const data = {
+      nome,
+      precoMensal: parseFloat(document.getElementById('plano-preco-mensal').value) || 0,
+      precoAnual: parseFloat(document.getElementById('plano-preco-anual').value) || 0,
+      limites: {
+        maxFuncionarios: parseInt(document.getElementById('plano-max-funcionarios').value) || 0,
+        maxRecompensas: parseInt(document.getElementById('plano-max-recompensas').value) || 0
+      },
+      features: {
+        promocoes: document.getElementById('plano-feat-promocoes').checked,
+        cashback: document.getElementById('plano-feat-cashback').checked,
+        relatoriosAvancados: document.getElementById('plano-feat-relatorios').checked
+      },
+      ativo: document.getElementById('plano-ativo').checked
+    };
+
+    const finalId = id || db.ref('planos').push().key;
+    if (!id) data.createdAt = Date.now();
+    await db.ref('planos/' + finalId).update(data);
+
+    await auditLog(id ? 'plano.editar' : 'plano.criar', { type: 'plano', id: finalId, label: nome }, {});
+    showToast('Plano salvo.', 'success');
+    closeModal('modal-plano');
+    loadPlanos();
+  } catch (e) {
+    errEl.textContent = '⚠ ' + e.message;
+    errEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Salvar';
+  }
+}
+let niveisCache = {};
+let conquistasCache = {};
+
+async function loadNiveis() {
+  const el = document.getElementById('niveis-list');
+  try {
+    const snap = await db.ref('gamificacao/niveis').once('value');
+    niveisCache = snap.val() || {};
+    renderNiveisList();
+  } catch (e) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-sub">Erro: ${esc(e.message)}</div></div>`;
+  }
+}
+
+function renderNiveisList() {
+  const ids = Object.keys(niveisCache);
+  const el = document.getElementById('niveis-list');
+  if (!ids.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-sub">Nenhum nível cadastrado ainda.</div></div>';
+    renderIcons();
+    return;
+  }
+  ids.sort((a, b) => (niveisCache[a].xpNecessario || 0) - (niveisCache[b].xpNecessario || 0));
+  el.innerHTML = ids.map(id => {
+    const n = niveisCache[id];
+    return `
+      <div class="entity-card ativo">
+        <div><div class="entity-name">${esc(n.nome)}</div><div class="entity-sub">a partir de ${n.xpNecessario} XP</div></div>
+        <div class="entity-actions"><button class="btn btn-ghost btn-sm" onclick="openEditNivel('${id}')"><i data-lucide="pencil"></i></button></div>
+      </div>`;
+  }).join('');
+  renderIcons();
+}
+
+function openNewNivelModal() {
+  document.getElementById('nivel-modal-title').innerHTML = '<i data-lucide="stairs"></i> Novo Nível';
+  document.getElementById('niv-id').value = '';
+  document.getElementById('niv-nome').value = '';
+  document.getElementById('niv-xp').value = '';
+  document.getElementById('nivel-modal-error').classList.add('hidden');
+  openModal('modal-nivel');
+}
+
+function openEditNivel(id) {
+  const n = niveisCache[id];
+  if (!n) return;
+  document.getElementById('nivel-modal-title').innerHTML = '<i data-lucide="stairs"></i> Editar Nível';
+  document.getElementById('niv-id').value = id;
+  document.getElementById('niv-nome').value = n.nome || '';
+  document.getElementById('niv-xp').value = n.xpNecessario ?? '';
+  document.getElementById('nivel-modal-error').classList.add('hidden');
+  openModal('modal-nivel');
+}
+
+async function saveNivel() {
+  const errEl = document.getElementById('nivel-modal-error');
+  errEl.classList.add('hidden');
+  try {
+    const id = document.getElementById('niv-id').value;
+    const nome = document.getElementById('niv-nome').value.trim();
+    const xpNecessario = parseInt(document.getElementById('niv-xp').value);
+    if (!nome) throw new Error('Informe o nome do nível.');
+    if (isNaN(xpNecessario) || xpNecessario < 0) throw new Error('Informe o XP necessário.');
+
+    const finalId = id || db.ref('gamificacao/niveis').push().key;
+    await db.ref('gamificacao/niveis/' + finalId).set({ nome, xpNecessario });
+    await auditLog(id ? 'nivel.editar' : 'nivel.criar', { type: 'nivel', id: finalId, label: nome }, {});
+    showToast('Nível salvo.', 'success');
+    closeModal('modal-nivel');
+    loadNiveis();
+  } catch (e) {
+    errEl.textContent = '⚠ ' + e.message;
+    errEl.classList.remove('hidden');
+  }
+}
+
+async function loadConquistas() {
+  const el = document.getElementById('conquistas-list');
+  try {
+    const snap = await db.ref('gamificacao/conquistas').once('value');
+    conquistasCache = snap.val() || {};
+    renderConquistasList();
+  } catch (e) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-sub">Erro: ${esc(e.message)}</div></div>`;
+  }
+}
+
+const CRITERIO_LABELS = {
+  nivel_minimo: 'Nível mínimo',
+  total_pontos_minimo: 'Total de pontos',
+  total_resgates_minimo: 'Total de resgates',
+  streak_minimo: 'Streak (dias)'
+};
+
+function renderConquistasList() {
+  const ids = Object.keys(conquistasCache);
+  const el = document.getElementById('conquistas-list');
+  if (!ids.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-sub">Nenhuma conquista cadastrada ainda.</div></div>';
+    renderIcons();
+    return;
+  }
+  el.innerHTML = ids.map(id => {
+    const c = conquistasCache[id];
+    return `
+      <div class="entity-card ativo">
+        <div><div class="entity-name">${esc(c.nome)}</div><div class="entity-sub">${esc(c.descricao || '')} · ${esc(CRITERIO_LABELS[c.criterio?.tipo] || '')}: ${c.criterio?.valor}</div></div>
+        <div class="entity-actions"><button class="btn btn-ghost btn-sm" onclick="openEditConquista('${id}')"><i data-lucide="pencil"></i></button></div>
+      </div>`;
+  }).join('');
+  renderIcons();
+}
+
+function openNewConquistaModal() {
+  document.getElementById('conquista-modal-title').innerHTML = '<i data-lucide="sparkles"></i> Nova Conquista';
+  document.getElementById('conq-id').value = '';
+  document.getElementById('conq-nome').value = '';
+  document.getElementById('conq-descricao').value = '';
+  document.getElementById('conq-icone').value = 'star';
+  document.getElementById('conq-criterio-tipo').value = 'nivel_minimo';
+  document.getElementById('conq-criterio-valor').value = '';
+  document.getElementById('conquista-modal-error').classList.add('hidden');
+  openModal('modal-conquista');
+}
+
+function openEditConquista(id) {
+  const c = conquistasCache[id];
+  if (!c) return;
+  document.getElementById('conquista-modal-title').innerHTML = '<i data-lucide="sparkles"></i> Editar Conquista';
+  document.getElementById('conq-id').value = id;
+  document.getElementById('conq-nome').value = c.nome || '';
+  document.getElementById('conq-descricao').value = c.descricao || '';
+  document.getElementById('conq-icone').value = c.icone || 'star';
+  document.getElementById('conq-criterio-tipo').value = c.criterio?.tipo || 'nivel_minimo';
+  document.getElementById('conq-criterio-valor').value = c.criterio?.valor ?? '';
+  document.getElementById('conquista-modal-error').classList.add('hidden');
+  openModal('modal-conquista');
+}
+
+async function saveConquista() {
+  const errEl = document.getElementById('conquista-modal-error');
+  errEl.classList.add('hidden');
+  try {
+    const id = document.getElementById('conq-id').value;
+    const nome = document.getElementById('conq-nome').value.trim();
+    const valor = parseInt(document.getElementById('conq-criterio-valor').value);
+    if (!nome) throw new Error('Informe o nome da conquista.');
+    if (isNaN(valor) || valor < 1) throw new Error('Informe o valor do critério.');
+
+    const data = {
+      nome,
+      descricao: document.getElementById('conq-descricao').value.trim(),
+      icone: document.getElementById('conq-icone').value.trim() || 'star',
+      criterio: { tipo: document.getElementById('conq-criterio-tipo').value, valor }
+    };
+    const finalId = id || db.ref('gamificacao/conquistas').push().key;
+    await db.ref('gamificacao/conquistas/' + finalId).set(data);
+    await auditLog(id ? 'conquista.editar' : 'conquista.criar', { type: 'conquista', id: finalId, label: nome }, {});
+    showToast('Conquista salva.', 'success');
+    closeModal('modal-conquista');
+    loadConquistas();
+  } catch (e) {
+    errEl.textContent = '⚠ ' + e.message;
+    errEl.classList.remove('hidden');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// FINANCEIRO
+// ══════════════════════════════════════════════════════
+async function loadFinanceiro() {
+  try {
+    if (!Object.keys(planosCache).length) {
+      const snap = await db.ref('planos').once('value');
+      planosCache = snap.val() || {};
+    }
+
+    const empresas = Object.entries(empresasCache);
+    const hoje = Date.now();
+    let receitaMensal = 0, ativas = 0, inadimplentes = [], semPlano = 0;
+    const porPlano = {};
+
+    empresas.forEach(([id, e]) => {
+      if (e.status !== 'ativo') return;
+      if (!e.planId || !planosCache[e.planId]) { semPlano++; return; }
+      const plano = planosCache[e.planId];
+      const vencida = e.planExpiresAt && e.planExpiresAt < hoje;
+      if (vencida) {
+        inadimplentes.push({ id, nome: e.name, plano: plano.nome, vencimento: e.planExpiresAt });
+      } else {
+        receitaMensal += plano.precoMensal || 0;
+        ativas++;
+      }
+      porPlano[plano.nome] = (porPlano[plano.nome] || 0) + 1;
+    });
+
+    document.getElementById('fin-receita-mensal').textContent = formatCurrency(receitaMensal);
+    document.getElementById('fin-assinaturas-ativas').textContent = ativas;
+    document.getElementById('fin-inadimplentes').textContent = inadimplentes.length;
+    document.getElementById('fin-sem-plano').textContent = semPlano;
+
+    const inadEl = document.getElementById('fin-inadimplentes-list');
+    inadEl.innerHTML = inadimplentes.length ? inadimplentes.map(i => `
+      <div class="entity-card suspenso">
+        <div>
+          <div class="entity-name">${esc(i.nome)}</div>
+          <div class="entity-sub">Plano ${esc(i.plano)} · venceu em ${esc(formatDate(i.vencimento))}</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="showPage('empresas');openEditEmpresa('${i.id}')">Ver empresa</button>
+      </div>`).join('') : '<div class="empty-state"><div class="empty-sub">Nenhuma empresa inadimplente.</div></div>';
+
+    const porPlanoEl = document.getElementById('fin-por-plano-list');
+    const entradas = Object.entries(porPlano);
+    porPlanoEl.innerHTML = entradas.length ? entradas.map(([nome, qtd]) => `
+      <div class="entity-card ativo"><div><div class="entity-name">${esc(nome)}</div></div><div class="badge badge-accent">${qtd} empresa(s)</div></div>
+    `).join('') : '<div class="empty-state"><div class="empty-sub">Nenhum dado ainda.</div></div>';
+
+    renderIcons();
+  } catch (e) {
+    showToast('Erro ao carregar financeiro: ' + e.message, 'error');
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// COMUNICAÇÃO — notificação em massa (in-app, sem push)
+// ══════════════════════════════════════════════════════
+async function enviarComunicacao() {
+  const errEl = document.getElementById('comunicacao-error');
+  const btn = document.getElementById('btn-enviar-comunicacao');
+  errEl.classList.add('hidden');
+  try {
+    const titulo = document.getElementById('com-titulo').value.trim();
+    const mensagem = document.getElementById('com-mensagem').value.trim();
+    const alvo = document.getElementById('com-alvo').value;
+    if (!titulo || !mensagem) throw new Error('Preencha título e mensagem.');
+    if (!confirm(`Confirma o envio para "${alvo === 'todos' ? 'todos os usuários' : alvo}"?`)) return;
+
+    btn.disabled = true; btn.textContent = 'Enviando...';
+
+    const usnap = await db.ref('users').orderByChild('role').equalTo('usuario').once('value');
+    const uids = usnap.exists() ? Object.keys(usnap.val()) : [];
+
+    const payload = { titulo, mensagem, tipo: 'aviso', lida: false, createdAt: Date.now() };
+    for (const uid of uids) {
+      await db.ref('notificacoes/' + uid).push(payload);
+    }
+
+    await db.ref('notificacoes_broadcast').push({
+      titulo, mensagem, alvo, criadoPor: currentAdmin.uid, createdAt: Date.now(), totalEnviados: uids.length
+    });
+
+    await auditLog('comunicacao.enviar', { type: 'broadcast', label: titulo }, { alvo, totalEnviados: uids.length });
+    showToast(`Enviado para ${uids.length} usuário(s).`, 'success');
+    document.getElementById('com-titulo').value = '';
+    document.getElementById('com-mensagem').value = '';
+    loadComunicacaoHistorico();
+  } catch (e) {
+    errEl.textContent = '⚠ ' + e.message;
+    errEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i data-lucide="send"></i> Enviar';
+    renderIcons();
+  }
+}
+
+async function loadComunicacaoHistorico() {
+  const el = document.getElementById('comunicacao-historico-list');
+  try {
+    const snap = await db.ref('notificacoes_broadcast').orderByChild('createdAt').limitToLast(30).once('value');
+    const items = [];
+    snap.forEach(c => items.push(c.val()));
+    items.reverse();
+    if (!items.length) return; // mantém o empty-state do HTML
+    el.innerHTML = items.map(n => `
+      <div class="entity-card ativo">
+        <div>
+          <div class="entity-name">${esc(n.titulo)}</div>
+          <div class="entity-sub">${esc(n.mensagem)} · ${esc(formatDateTime(n.createdAt))}</div>
+        </div>
+        <div class="badge badge-accent">${n.totalEnviados || 0} enviado(s)</div>
+      </div>`).join('');
+    renderIcons();
+  } catch (e) {
+    console.warn('[comunicacao] erro:', e.message);
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// TEMPORADAS — CRUD
+// ══════════════════════════════════════════════════════
+let temporadasCache = {};
+
+async function loadTemporadas() {
+  const el = document.getElementById('temporadas-list');
+  try {
+    const snap = await db.ref('temporadas').once('value');
+    temporadasCache = snap.val() || {};
+    renderTemporadasList();
+  } catch (e) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-sub">Erro: ${esc(e.message)}</div></div>`;
+  }
+}
+
+const TEMPORADA_BADGE = { ativa: 'badge-active', futura: 'badge-accent', encerrada: 'badge-closed' };
+
+function renderTemporadasList() {
+  const ids = Object.keys(temporadasCache);
+  const el = document.getElementById('temporadas-list');
+  if (!ids.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon"><i data-lucide="calendar-range"></i></div><div class="empty-title">Nenhuma temporada cadastrada</div></div>';
+    renderIcons();
+    return;
+  }
+  ids.sort((a, b) => (temporadasCache[b].dataInicio || '').localeCompare(temporadasCache[a].dataInicio || ''));
+  el.innerHTML = ids.map(id => {
+    const t = temporadasCache[id];
+    return `
+      <div class="entity-card ${t.status === 'ativa' ? 'ativo' : t.status === 'encerrada' ? 'suspenso' : 'pendente'}">
+        <div>
+          <div class="entity-name">${esc(t.nome)} <span class="badge ${TEMPORADA_BADGE[t.status] || 'badge-closed'}">${esc(t.status)}</span></div>
+          <div class="entity-sub">${esc(t.dataInicio)} a ${esc(t.dataFim)}</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="openEditTemporada('${id}')"><i data-lucide="pencil"></i></button>
+      </div>`;
+  }).join('');
+  renderIcons();
+}
+
+function openNewTemporadaModal() {
+  document.getElementById('temporada-modal-title').innerHTML = '<i data-lucide="calendar-range"></i> Nova Temporada';
+  document.getElementById('temp-id').value = '';
+  document.getElementById('temp-nome').value = '';
+  document.getElementById('temp-descricao').value = '';
+  document.getElementById('temp-inicio').value = '';
+  document.getElementById('temp-fim').value = '';
+  document.getElementById('temp-status').value = 'futura';
+  document.getElementById('temp-banner-preview').style.display = 'none';
+  document.getElementById('temporada-modal-error').classList.add('hidden');
+  openModal('modal-temporada');
+}
+
+function openEditTemporada(id) {
+  const t = temporadasCache[id];
+  if (!t) return;
+  document.getElementById('temporada-modal-title').innerHTML = '<i data-lucide="calendar-range"></i> Editar Temporada';
+  document.getElementById('temp-id').value = id;
+  document.getElementById('temp-nome').value = t.nome || '';
+  document.getElementById('temp-descricao').value = t.descricao || '';
+  document.getElementById('temp-inicio').value = t.dataInicio || '';
+  document.getElementById('temp-fim').value = t.dataFim || '';
+  document.getElementById('temp-status').value = t.status || 'futura';
+  const preview = document.getElementById('temp-banner-preview');
+  if (t.bannerUrl) { preview.src = t.bannerUrl; preview.style.display = 'block'; } else { preview.style.display = 'none'; }
+  document.getElementById('temporada-modal-error').classList.add('hidden');
+  openModal('modal-temporada');
+}
+
+async function saveTemporada() {
+  const errEl = document.getElementById('temporada-modal-error');
+  const btn = document.getElementById('btn-save-temporada');
+  errEl.classList.add('hidden');
+  try {
+    const id = document.getElementById('temp-id').value;
+    const nome = document.getElementById('temp-nome').value.trim();
+    const dataInicio = document.getElementById('temp-inicio').value;
+    const dataFim = document.getElementById('temp-fim').value;
+    if (!nome) throw new Error('Informe o nome da temporada.');
+    if (!dataInicio || !dataFim) throw new Error('Informe início e fim.');
+
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    const data = {
+      nome,
+      descricao: document.getElementById('temp-descricao').value.trim(),
+      dataInicio, dataFim,
+      status: document.getElementById('temp-status').value
+    };
+
+    const file = document.getElementById('temp-banner-file').files[0];
+    if (file) {
+      showToast('Enviando banner...', 'info');
+      data.bannerUrl = await uploadImage(file);
+    }
+
+    const finalId = id || db.ref('temporadas').push().key;
+    if (!id) data.createdAt = Date.now();
+    await db.ref('temporadas/' + finalId).update(data);
+
+    await auditLog(id ? 'temporada.editar' : 'temporada.criar', { type: 'temporada', id: finalId, label: nome }, {});
+    showToast('Temporada salva.', 'success');
+    closeModal('modal-temporada');
+    loadTemporadas();
+  } catch (e) {
+    errEl.textContent = '⚠ ' + e.message;
+    errEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Salvar';
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// CAMPEONATOS — CRUD + sorteio/avanço de chaveamento
+// ══════════════════════════════════════════════════════
+let campeonatosCache = {};
+
+async function loadCampeonatos() {
+  const el = document.getElementById('campeonatos-list');
+  try {
+    const snap = await db.ref('campeonatos').once('value');
+    campeonatosCache = snap.val() || {};
+    renderCampeonatosList();
+  } catch (e) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-sub">Erro: ${esc(e.message)}</div></div>`;
+  }
+}
+
+const CAMPEONATO_BADGE = { inscricoes: 'badge-accent', sorteado: 'badge-teal', em_andamento: 'badge-violet', encerrado: 'badge-closed' };
+const CAMPEONATO_LABEL = { inscricoes: 'Inscrições abertas', sorteado: 'Sorteado', em_andamento: 'Em andamento', encerrado: 'Encerrado' };
+
+function renderCampeonatosList() {
+  const ids = Object.keys(campeonatosCache);
+  const el = document.getElementById('campeonatos-list');
+  if (!ids.length) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon"><i data-lucide="trophy"></i></div><div class="empty-title">Nenhum campeonato cadastrado</div></div>';
+    renderIcons();
+    return;
+  }
+  ids.sort((a, b) => (campeonatosCache[b].createdAt || 0) - (campeonatosCache[a].createdAt || 0));
+  el.innerHTML = ids.map(id => {
+    const c = campeonatosCache[id];
+    const qtdInscritos = Object.keys(c.participantes || {}).length;
+    return `
+      <div class="entity-card ${c.status === 'encerrado' ? 'suspenso' : 'ativo'}">
+        <div>
+          <div class="entity-name">${esc(c.nome)} <span class="badge ${CAMPEONATO_BADGE[c.status] || 'badge-closed'}">${esc(CAMPEONATO_LABEL[c.status] || c.status)}</span></div>
+          <div class="entity-sub">${qtdInscritos}/${c.maxParticipantes} inscritos · taxa ${c.taxaInscricaoXp || 0} XP ${c.campeaoNome ? '· 🏆 ' + esc(c.campeaoNome) : ''}</div>
+        </div>
+        <div class="entity-actions">
+          <button class="btn btn-primary btn-sm" onclick="abrirGerenciarCampeonato('${id}')"><i data-lucide="settings-2"></i> Gerenciar</button>
+        </div>
+      </div>`;
+  }).join('');
+  renderIcons();
+}
+
+async function populateCampeonatoTemporadaSelect(selectedId) {
+  if (!Object.keys(temporadasCache).length) {
+    const snap = await db.ref('temporadas').once('value');
+    temporadasCache = snap.val() || {};
+  }
+  const sel = document.getElementById('camp-temporada');
+  sel.innerHTML = '<option value="">Sem temporada</option>' +
+    Object.entries(temporadasCache).map(([id, t]) => `<option value="${id}">${esc(t.nome)}</option>`).join('');
+  sel.value = selectedId || '';
+}
+
+function openNewCampeonatoModal() {
+  document.getElementById('campeonato-modal-title').innerHTML = '<i data-lucide="trophy"></i> Novo Campeonato';
+  document.getElementById('camp-id').value = '';
+  document.getElementById('camp-nome').value = '';
+  document.getElementById('camp-descricao').value = '';
+  document.getElementById('camp-data-inicio').value = '';
+  document.getElementById('camp-data-fim').value = '';
+  document.getElementById('camp-max-participantes').value = '8';
+  document.getElementById('camp-taxa-xp').value = 0;
+  document.getElementById('camp-recompensa-campeao').value = 200;
+  document.getElementById('camp-recompensa-vice').value = 80;
+  document.getElementById('camp-regulamento').value = '';
+  document.getElementById('camp-banner-preview').style.display = 'none';
+  document.getElementById('campeonato-modal-error').classList.add('hidden');
+  populateCampeonatoTemporadaSelect();
+  openModal('modal-campeonato');
+}
+
+async function saveCampeonato() {
+  const errEl = document.getElementById('campeonato-modal-error');
+  const btn = document.getElementById('btn-save-campeonato');
+  errEl.classList.add('hidden');
+  try {
+    const nome = document.getElementById('camp-nome').value.trim();
+    const dataInicio = document.getElementById('camp-data-inicio').value;
+    if (!nome) throw new Error('Informe o nome do campeonato.');
+    if (!dataInicio) throw new Error('Informe até quando as inscrições ficam abertas.');
+
+    btn.disabled = true; btn.textContent = 'Salvando...';
+    const data = {
+      nome,
+      descricao: document.getElementById('camp-descricao').value.trim(),
+      temporadaId: document.getElementById('camp-temporada').value || null,
+      dataInicio,
+      dataFim: document.getElementById('camp-data-fim').value || null,
+      maxParticipantes: parseInt(document.getElementById('camp-max-participantes').value),
+      taxaInscricaoXp: parseInt(document.getElementById('camp-taxa-xp').value) || 0,
+      recompensaCampeaoXp: parseInt(document.getElementById('camp-recompensa-campeao').value) || 0,
+      recompensaViceXp: parseInt(document.getElementById('camp-recompensa-vice').value) || 0,
+      regulamento: document.getElementById('camp-regulamento').value.trim(),
+      status: 'inscricoes'
+    };
+
+    const file = document.getElementById('camp-banner-file').files[0];
+    if (file) {
+      showToast('Enviando banner...', 'info');
+      data.bannerUrl = await uploadImage(file);
+    }
+
+    const finalId = db.ref('campeonatos').push().key;
+    data.createdAt = Date.now();
+    data.participantes = {};
+    await db.ref('campeonatos/' + finalId).set(data);
+
+    await auditLog('campeonato.criar', { type: 'campeonato', id: finalId, label: nome }, {});
+    showToast('Campeonato criado.', 'success');
+    closeModal('modal-campeonato');
+    loadCampeonatos();
+  } catch (e) {
+    errEl.textContent = '⚠ ' + e.message;
+    errEl.classList.remove('hidden');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Salvar';
+  }
+}
+
+// ── Gerenciar campeonato (participantes + chaveamento) ──
+let gerenciandoCampeonatoId = null;
+
+async function abrirGerenciarCampeonato(id) {
+  gerenciandoCampeonatoId = id;
+  await recarregarGerenciarCampeonato();
+  openModal('modal-gerenciar-campeonato');
+}
+
+async function recarregarGerenciarCampeonato() {
+  const snap = await db.ref('campeonatos/' + gerenciandoCampeonatoId).once('value');
+  const c = snap.val();
+  campeonatosCache[gerenciandoCampeonatoId] = c;
+  if (!c) return;
+
+  document.getElementById('gerenciar-campeonato-titulo').innerHTML = `<i data-lucide="trophy"></i> ${esc(c.nome)}`;
+
+  const participantes = c.participantes || {};
+  const qtd = Object.keys(participantes).length;
+
+  document.getElementById('gerenciar-participantes-bloco').classList.toggle('hidden', c.status !== 'inscricoes');
+  document.getElementById('gerenciar-bracket-bloco').classList.toggle('hidden', !c.chaveamento);
+  document.getElementById('gerenciar-resultado-bloco').classList.toggle('hidden', c.status !== 'encerrado');
+
+  const statusMsgs = {
+    inscricoes: `Inscrições abertas — ${qtd}/${c.maxParticipantes} inscritos. Taxa: ${c.taxaInscricaoXp || 0} XP.`,
+    sorteado: 'Chaveamento sorteado — declare os vencedores de cada partida.',
+    em_andamento: 'Campeonato em andamento — declare os vencedores conforme as partidas acontecem.',
+    encerrado: 'Campeonato encerrado.'
+  };
+  document.getElementById('gerenciar-campeonato-status').textContent = statusMsgs[c.status] || '';
+
+  if (c.status === 'inscricoes') {
+    document.getElementById('gc-participantes-count').textContent = qtd;
+    document.getElementById('gc-participantes-max').textContent = c.maxParticipantes;
+    const listEl = document.getElementById('gc-participantes-list');
+    const nomes = Object.values(participantes).map(p => p.nome);
+    listEl.innerHTML = nomes.length
+      ? nomes.map(n => `<span class="badge badge-teal" style="margin:2px">${esc(n)}</span>`).join('')
+      : '<div class="text-muted text-sm">Nenhum inscrito ainda.</div>';
+    document.getElementById('btn-sortear').disabled = qtd < 2;
+  }
+
+  if (c.chaveamento) {
+    document.getElementById('gc-bracket').innerHTML = renderBracketHtml(c);
+  }
+
+  if (c.status === 'encerrado') {
+    document.getElementById('gc-resultado-msg').innerHTML = `🏆 Campeão: <strong>${esc(c.campeaoNome || '—')}</strong> · Vice: <strong>${esc(c.viceNome || '—')}</strong>`;
+  }
+
+  renderIcons();
+}
+
+function renderBracketHtml(campeonato) {
+  const rounds = campeonato.chaveamento?.rounds || [];
+  return rounds.map((round, ri) => `
+    <div class="match-round-title"><i data-lucide="swords"></i> ${esc(round.nome)}</div>
+    ${round.partidas.map((m, mi) => {
+      const podeDeclarar = campeonato.status !== 'encerrado' && m.status === 'pendente' && m.jogador1Uid && m.jogador2Uid;
+      const row = (uid, nome, isVencedor) => {
+        if (!uid) return `<div class="match-player-row vazio"><span class="match-player-name">A definir</span></div>`;
+        const cls = isVencedor ? 'vencedor' : '';
+        // Passamos só índices e o uid (sempre alfanumérico, seguro em atributo)
+        // pelo onclick — o nome é lido de volta dos dados dentro da função,
+        // nunca interpolado direto no HTML, pra não quebrar com aspas no nome.
+        const btn = podeDeclarar ? `<button class="btn btn-ghost btn-sm" onclick="declararVencedor(${ri},${mi},'${uid}')">Vencedor</button>` : '';
+        return `<div class="match-player-row ${cls}"><span class="match-player-name">${esc(nome || uid)}</span>${btn}</div>`;
+      };
+      return `<div class="match-card">
+        ${row(m.jogador1Uid, m.jogador1Nome, m.vencedorUid === m.jogador1Uid)}
+        ${row(m.jogador2Uid, m.jogador2Nome, m.vencedorUid === m.jogador2Uid)}
+      </div>`;
+    }).join('')}
+  `).join('');
+}
+
+// Gera o chaveamento: no máximo 1 "bye" por partida na primeira rodada —
+// isso é garantido matematicamente porque o tamanho do bracket é a MENOR
+// potência de 2 que cobre os inscritos, então sempre há mais gente real que
+// vagas de bye. Detalhe todo em ARQUITETURA.md.
+function gerarEstruturaChaveamento(participantesObj) {
+  const uids = Object.keys(participantesObj);
+  // Fisher-Yates
+  for (let i = uids.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [uids[i], uids[j]] = [uids[j], uids[i]];
+  }
+
+  let tamanhoBracket = 2;
+  while (tamanhoBracket < uids.length) tamanhoBracket *= 2;
+  const numMatches = tamanhoBracket / 2;
+  const numByes = tamanhoBracket - uids.length;
+
+  const NOMES_POR_TAMANHO = {
+    2: ['Final'],
+    4: ['Semifinal', 'Final'],
+    8: ['Quartas de Final', 'Semifinal', 'Final'],
+    16: ['Oitavas de Final', 'Quartas de Final', 'Semifinal', 'Final'],
+    32: ['Dezesseisavos de Final', 'Oitavas de Final', 'Quartas de Final', 'Semifinal', 'Final']
+  };
+  const nomes = NOMES_POR_TAMANHO[tamanhoBracket] || [];
+
+  let ptr = 0;
+  const primeirasPartidas = [];
+  for (let i = 0; i < numMatches; i++) {
+    const temBye = i < numByes;
+    const u1 = uids[ptr++];
+    const u2 = temBye ? null : uids[ptr++];
+    const partida = {
+      jogador1Uid: u1 || null, jogador1Nome: u1 ? participantesObj[u1].nome : null,
+      jogador2Uid: u2 || null, jogador2Nome: u2 ? participantesObj[u2].nome : null,
+      vencedorUid: null, vencedorNome: null, status: 'pendente'
+    };
+    if (u1 && !u2) { partida.vencedorUid = u1; partida.vencedorNome = participantesObj[u1].nome; partida.status = 'concluida'; }
+    primeirasPartidas.push(partida);
+  }
+
+  const rounds = [{ nome: nomes[0] || 'Rodada 1', partidas: primeirasPartidas }];
+  let qtdAnterior = primeirasPartidas.length;
+  for (let r = 1; r < nomes.length; r++) {
+    const qtd = qtdAnterior / 2;
+    const partidas = [];
+    for (let i = 0; i < qtd; i++) {
+      partidas.push({ jogador1Uid: null, jogador1Nome: null, jogador2Uid: null, jogador2Nome: null, vencedorUid: null, vencedorNome: null, status: 'pendente' });
+    }
+    rounds.push({ nome: nomes[r], partidas });
+    qtdAnterior = qtd;
+  }
+
+  // Propaga os "byes" da primeira rodada (que já têm vencedor automático) pra rodada 2
+  if (rounds.length > 1) {
+    rounds[0].partidas.forEach((partida, i) => {
+      if (partida.status !== 'concluida') return;
+      const proximaPartida = rounds[1].partidas[Math.floor(i / 2)];
+      if (i % 2 === 0) { proximaPartida.jogador1Uid = partida.vencedorUid; proximaPartida.jogador1Nome = partida.vencedorNome; }
+      else { proximaPartida.jogador2Uid = partida.vencedorUid; proximaPartida.jogador2Nome = partida.vencedorNome; }
+    });
+  }
+
+  return rounds;
+}
+
+async function sortearChaveamento() {
+  const c = campeonatosCache[gerenciandoCampeonatoId];
+  if (!c) return;
+  const qtd = Object.keys(c.participantes || {}).length;
+  if (qtd < 2) { showToast('Mínimo de 2 participantes pra sortear.', 'error'); return; }
+  if (!confirm(`Sortear o chaveamento com ${qtd} participante(s)? Isso fecha as inscrições.`)) return;
+
+  try {
+    const rounds = gerarEstruturaChaveamento(c.participantes);
+    const novoStatus = rounds.length === 1 ? 'em_andamento' : 'sorteado';
+    await db.ref('campeonatos/' + gerenciandoCampeonatoId).update({ chaveamento: { rounds }, status: novoStatus });
+    await auditLog('campeonato.sortear', { type: 'campeonato', id: gerenciandoCampeonatoId, label: c.nome }, { participantes: qtd });
+    showToast('Chaveamento sorteado!', 'success');
+    await recarregarGerenciarCampeonato();
+    loadCampeonatos();
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+async function declararVencedor(roundIndex, matchIndex, vencedorUid) {
+  const c = campeonatosCache[gerenciandoCampeonatoId];
+  if (!c || !c.chaveamento) return;
+
+  const partidaOriginal = c.chaveamento.rounds[roundIndex].partidas[matchIndex];
+  const vencedorNome = partidaOriginal.jogador1Uid === vencedorUid ? partidaOriginal.jogador1Nome : partidaOriginal.jogador2Nome;
+  if (!confirm(`Confirma "${vencedorNome}" como vencedor desta partida?`)) return;
+
+  try {
+    const rounds = JSON.parse(JSON.stringify(c.chaveamento.rounds)); // clone
+    const partida = rounds[roundIndex].partidas[matchIndex];
+    partida.vencedorUid = vencedorUid;
+    partida.vencedorNome = vencedorNome;
+    partida.status = 'concluida';
+
+    const ehFinal = roundIndex === rounds.length - 1;
+    if (!ehFinal) {
+      const proximaPartida = rounds[roundIndex + 1].partidas[Math.floor(matchIndex / 2)];
+      if (matchIndex % 2 === 0) { proximaPartida.jogador1Uid = vencedorUid; proximaPartida.jogador1Nome = vencedorNome; }
+      else { proximaPartida.jogador2Uid = vencedorUid; proximaPartida.jogador2Nome = vencedorNome; }
+    }
+
+    const updates = { chaveamento: { rounds }, status: ehFinal ? 'encerrado' : 'em_andamento' };
+
+    if (ehFinal) {
+      const perdedorUid = partida.jogador1Uid === vencedorUid ? partida.jogador2Uid : partida.jogador1Uid;
+      const perdedorNome = partida.jogador1Uid === vencedorUid ? partida.jogador2Nome : partida.jogador1Nome;
+      updates.campeaoUid = vencedorUid; updates.campeaoNome = vencedorNome;
+      updates.viceUid = perdedorUid; updates.viceNome = perdedorNome;
+      updates.encerradoEm = Date.now();
+    }
+
+    await db.ref('campeonatos/' + gerenciandoCampeonatoId).update(updates);
+
+    if (ehFinal) {
+      await distribuirRecompensasCampeonato(c, vencedorUid, vencedorNome, updates.viceUid, updates.viceNome);
+    }
+
+    await auditLog('campeonato.declarar_vencedor', { type: 'campeonato', id: gerenciandoCampeonatoId, label: c.nome }, { roundIndex, matchIndex, vencedorNome, final: ehFinal });
+    showToast(ehFinal ? `🏆 ${vencedorNome} é o campeão!` : 'Vencedor registrado.', 'success');
+    await recarregarGerenciarCampeonato();
+    loadCampeonatos();
+  } catch (e) {
+    showToast('Erro: ' + e.message, 'error');
+  }
+}
+
+async function distribuirRecompensasCampeonato(campeonato, campeaoUid, campeaoNome, viceUid, viceNome) {
+  const xpCampeao = campeonato.recompensaCampeaoXp || 0;
+  const xpVice = campeonato.recompensaViceXp || 0;
+  const temporadaId = campeonato.temporadaId;
+
+  if (xpCampeao > 0) await db.ref('users/' + campeaoUid + '/xp').transaction(cur => (cur || 0) + xpCampeao);
+  if (viceUid && xpVice > 0) await db.ref('users/' + viceUid + '/xp').transaction(cur => (cur || 0) + xpVice);
+
+  await db.ref('ranking_global/' + campeaoUid).update({ nome: campeaoNome, pontos: firebase.database.ServerValue.increment(100) });
+  if (viceUid) await db.ref('ranking_global/' + viceUid).update({ nome: viceNome, pontos: firebase.database.ServerValue.increment(50) });
+
+  if (temporadaId) {
+    await db.ref('ranking_temporada/' + temporadaId + '/' + campeaoUid).update({ nome: campeaoNome, pontos: firebase.database.ServerValue.increment(100) });
+    if (viceUid) await db.ref('ranking_temporada/' + temporadaId + '/' + viceUid).update({ nome: viceNome, pontos: firebase.database.ServerValue.increment(50) });
+  }
+}
+</script>
+<script src="../assets/js/sw-update.js"></script>
+</body>
+</html>
