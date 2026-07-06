@@ -467,10 +467,17 @@
       <input type="hidden" id="temp-id">
       <div class="form-group">
         <label class="form-label">Banner</label>
-        <div class="d-flex gap-12 align-center">
-          <img id="temp-banner-preview" src="" alt="" style="width:56px;height:56px;border-radius:12px;object-fit:cover;background:var(--bg-3);display:none">
-          <input type="file" id="temp-banner-file" accept="image/*" class="form-control">
+        <div class="upload-box" id="temp-banner-box" onclick="document.getElementById('temp-banner-file').click()">
+          <img class="upload-preview" id="temp-banner-preview" src="" alt="">
+          <div class="upload-placeholder" id="temp-banner-placeholder"><i data-lucide="image-plus"></i></div>
+          <div class="upload-info">
+            <div class="upload-label">Toque para enviar</div>
+            <div class="upload-hint">PNG ou JPG, até 5MB</div>
+            <div class="upload-filename" id="temp-banner-filename"></div>
+          </div>
+          <button type="button" class="upload-remove hidden" id="temp-banner-remove" onclick="event.stopPropagation(); clearImageUpload('temp-banner')"><i data-lucide="x"></i></button>
         </div>
+        <input type="file" class="upload-input" id="temp-banner-file" accept="image/*" onchange="handleImagePreview('temp-banner')">
       </div>
       <div class="form-group"><label class="form-label">Nome</label><input type="text" id="temp-nome" class="form-control" placeholder="Ex: Temporada 2026"></div>
       <div class="form-group"><label class="form-label">Descrição</label><input type="text" id="temp-descricao" class="form-control"></div>
@@ -506,10 +513,17 @@
       <input type="hidden" id="camp-id">
       <div class="form-group">
         <label class="form-label">Banner</label>
-        <div class="d-flex gap-12 align-center">
-          <img id="camp-banner-preview" src="" alt="" style="width:56px;height:56px;border-radius:12px;object-fit:cover;background:var(--bg-3);display:none">
-          <input type="file" id="camp-banner-file" accept="image/*" class="form-control">
+        <div class="upload-box" id="camp-banner-box" onclick="document.getElementById('camp-banner-file').click()">
+          <img class="upload-preview" id="camp-banner-preview" src="" alt="">
+          <div class="upload-placeholder" id="camp-banner-placeholder"><i data-lucide="image-plus"></i></div>
+          <div class="upload-info">
+            <div class="upload-label">Toque para enviar</div>
+            <div class="upload-hint">PNG ou JPG, até 5MB</div>
+            <div class="upload-filename" id="camp-banner-filename"></div>
+          </div>
+          <button type="button" class="upload-remove hidden" id="camp-banner-remove" onclick="event.stopPropagation(); clearImageUpload('camp-banner')"><i data-lucide="x"></i></button>
         </div>
+        <input type="file" class="upload-input" id="camp-banner-file" accept="image/*" onchange="handleImagePreview('camp-banner')">
       </div>
       <div class="form-group"><label class="form-label">Nome</label><input type="text" id="camp-nome" class="form-control"></div>
       <div class="form-group"><label class="form-label">Descrição</label><input type="text" id="camp-descricao" class="form-control"></div>
@@ -1522,7 +1536,7 @@ function openNewTemporadaModal() {
   document.getElementById('temp-inicio').value = '';
   document.getElementById('temp-fim').value = '';
   document.getElementById('temp-status').value = 'futura';
-  document.getElementById('temp-banner-preview').style.display = 'none';
+  setImageUploadPreview('temp-banner', null);
   document.getElementById('temporada-modal-error').classList.add('hidden');
   openModal('modal-temporada');
 }
@@ -1537,8 +1551,7 @@ function openEditTemporada(id) {
   document.getElementById('temp-inicio').value = t.dataInicio || '';
   document.getElementById('temp-fim').value = t.dataFim || '';
   document.getElementById('temp-status').value = t.status || 'futura';
-  const preview = document.getElementById('temp-banner-preview');
-  if (t.bannerUrl) { preview.src = t.bannerUrl; preview.style.display = 'block'; } else { preview.style.display = 'none'; }
+  setImageUploadPreview('temp-banner', t.bannerUrl);
   document.getElementById('temporada-modal-error').classList.add('hidden');
   openModal('modal-temporada');
 }
@@ -1653,7 +1666,7 @@ function openNewCampeonatoModal() {
   document.getElementById('camp-recompensa-campeao').value = 200;
   document.getElementById('camp-recompensa-vice').value = 80;
   document.getElementById('camp-regulamento').value = '';
-  document.getElementById('camp-banner-preview').style.display = 'none';
+  setImageUploadPreview('camp-banner', null);
   document.getElementById('campeonato-modal-error').classList.add('hidden');
   populateCampeonatoTemporadaSelect();
   openModal('modal-campeonato');

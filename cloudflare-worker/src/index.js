@@ -32,6 +32,20 @@ const ROUTES = {
   '/api/campeonato/inscrever': handleCampeonatoInscrever
 };
 
+const REQUIRED_ENV_VARS = [
+  'FIREBASE_PROJECT_ID',
+  'FIREBASE_DATABASE_URL',
+  'FIREBASE_SERVICE_ACCOUNT_EMAIL',
+  'FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY'
+];
+
+function checkRequiredEnvVars(env) {
+  const faltando = REQUIRED_ENV_VARS.filter(nome => !env[nome]);
+  if (faltando.length > 0) {
+    throw statusError(500, `Configuração incompleta na Worker — faltando: ${faltando.join(', ')}. Confira em Settings → Variables and Secrets se o nome está exatamente igual (maiúsculas/minúsculas importam) e se está marcado como tipo "Secret".`);
+  }
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -56,6 +70,8 @@ export default {
     }
 
     try {
+      checkRequiredEnvVars(env);
+
       const authHeader = request.headers.get('Authorization') || '';
       const idToken = authHeader.replace(/^Bearer\s+/i, '').trim();
       if (!idToken) throw statusError(401, 'Token de autenticação ausente.');

@@ -2,6 +2,19 @@ name = "api"
 main = "src/index.js"
 compatibility_date = "2024-09-23"
 
+# Declara os secrets que a Worker exige — se algum estiver faltando na hora do
+# deploy (via GitHub Actions ou wrangler deploy manual), o deploy FALHA com um
+# erro claro em vez de subir a Worker quebrada silenciosamente. Requer
+# Wrangler >= 4.36.0 (mesma versão mínima já exigida pelo rate limiting abaixo).
+[secrets]
+required = [
+  "FIREBASE_PROJECT_ID",
+  "FIREBASE_DATABASE_URL",
+  "FIREBASE_SERVICE_ACCOUNT_EMAIL",
+  "FIREBASE_SERVICE_ACCOUNT_PRIVATE_KEY",
+  "ALLOWED_ORIGIN"
+]
+
 # Rate limiting nativo da Cloudflare (API de bindings — requer Wrangler >= 4.36.0).
 # namespace_id é um número que você escolhe (não é gerado pela Cloudflare) —
 # só precisa ser único dentro da sua conta. period só aceita 10 ou 60 segundos.

@@ -67,3 +67,73 @@
     return data.data.display_url || data.data.url;
   };
 })();
+
+/**
+ * Componente de upload com preview — usado em todo lugar que sobe imagem
+ * (logo/banner de empresa, banner de temporada/campeonato, imagem de
+ * recompensa). Precisa de 5 elementos com essa convenção de id:
+ *   {baseId}-box, {baseId}-file, {baseId}-preview,
+ *   {baseId}-placeholder, {baseId}-filename, {baseId}-remove
+ *
+ * setImageUploadPreview(baseId, urlExistente) → chama ao abrir o
+ *   formulário (edição), com a URL já salva (ou null se for criação nova).
+ * handleImagePreview(baseId) → conectado ao onchange do <input type=file>.
+ * clearImageUpload(baseId) → conectado ao botão de remover; desfaz a seleção
+ *   nova e volta a mostrar a imagem existente (se houver).
+ */
+function applyImagePreview(baseId, url) {
+  const preview = document.getElementById(baseId + '-preview');
+  const placeholder = document.getElementById(baseId + '-placeholder');
+  const box = document.getElementById(baseId + '-box');
+  if (url) {
+    preview.src = url;
+    preview.classList.add('show');
+    placeholder.style.display = 'none';
+    box.classList.add('has-image');
+  } else {
+    preview.classList.remove('show');
+    preview.src = '';
+    placeholder.style.display = 'flex';
+    box.classList.remove('has-image');
+  }
+}
+
+function setImageUploadPreview(baseId, url) {
+  const box = document.getElementById(baseId + '-box');
+  box.dataset.existingUrl = url || '';
+  applyImagePreview(baseId, url || '');
+  document.getElementById(baseId + '-filename').textContent = '';
+  document.getElementById(baseId + '-remove').classList.add('hidden');
+  document.getElementById(baseId + '-file').value = '';
+}
+
+function handleImagePreview(baseId) {
+  const fileInput = document.getElementById(baseId + '-file');
+  const file = fileInput.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    showToast('Selecione um arquivo de imagem.', 'error');
+    fileInput.value = '';
+    return;
+  }
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('Imagem muito grande (máx. 5MB).', 'error');
+    fileInput.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    applyImagePreview(baseId, e.target.result);
+    document.getElementById(baseId + '-filename').textContent = file.name;
+    document.getElementById(baseId + '-remove').classList.remove('hidden');
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearImageUpload(baseId) {
+  document.getElementById(baseId + '-file').value = '';
+  document.getElementById(baseId + '-filename').textContent = '';
+  document.getElementById(baseId + '-remove').classList.add('hidden');
+  const existing = document.getElementById(baseId + '-box').dataset.existingUrl || '';
+  applyImagePreview(baseId, existing);
+}

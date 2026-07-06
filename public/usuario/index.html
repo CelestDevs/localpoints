@@ -43,21 +43,16 @@
     <nav class="sidebar-nav">
       <div class="nav-section-label">Painel</div>
       <a class="nav-item active" onclick="showPage('carteira');closeSidebar()" id="nav-carteira"><span class="nav-icon"><i data-lucide="wallet"></i></span> Carteira</a>
-      <a class="nav-item" onclick="showPage('id');closeSidebar()" id="nav-id"><span class="nav-icon"><i data-lucide="qr-code"></i></span> Identificação</a>
 
       <div class="nav-section-label">Descobrir</div>
       <a class="nav-item" onclick="showPage('recompensas');closeSidebar()" id="nav-recompensas"><span class="nav-icon"><i data-lucide="gift"></i></span> Recompensas</a>
-      <a class="nav-item" onclick="showPage('cupons');closeSidebar()" id="nav-cupons"><span class="nav-icon"><i data-lucide="ticket"></i></span> Cupons</a>
       <a class="nav-item" onclick="showPage('cashback');closeSidebar()" id="nav-cashback"><span class="nav-icon"><i data-lucide="circle-dollar-sign"></i></span> Cashback</a>
 
-      <div class="nav-section-label">Competir</div>
-      <a class="nav-item" onclick="showPage('ranking');closeSidebar()" id="nav-ranking"><span class="nav-icon"><i data-lucide="list-ordered"></i></span> Ranking</a>
+      <div class="nav-section-label">Jogar</div>
       <a class="nav-item" onclick="showPage('campeonatos');closeSidebar()" id="nav-campeonatos"><span class="nav-icon"><i data-lucide="trophy"></i></span> Campeonatos</a>
       <a class="nav-item" onclick="showPage('conquistas');closeSidebar()" id="nav-conquistas"><span class="nav-icon"><i data-lucide="sparkles"></i></span> Conquistas</a>
-      <a class="nav-item" onclick="showPage('indicacoes');closeSidebar()" id="nav-indicacoes"><span class="nav-icon"><i data-lucide="share-2"></i></span> Indicações</a>
 
       <div class="nav-section-label">Conta</div>
-      <a class="nav-item" onclick="showPage('notificacoes');closeSidebar()" id="nav-notificacoes"><span class="nav-icon"><i data-lucide="bell"></i></span> Notificações</a>
       <a class="nav-item" onclick="showPage('perfil');closeSidebar()" id="nav-perfil"><span class="nav-icon"><i data-lucide="user"></i></span> Meu Perfil</a>
     </nav>
     <div class="sidebar-footer">
@@ -69,28 +64,52 @@
     <div class="mobile-header">
       <button class="hamburger" onclick="openSidebar()"><span></span><span></span><span></span></button>
       <div class="mobile-logo"><span class="logo-local">Local</span><span class="logo-dot"></span><span class="logo-points">Points</span></div>
-      <div style="width:36px"></div>
+      <button class="notif-bell" onclick="abrirNotificacoes()"><i data-lucide="bell"></i><span class="notif-badge hidden" id="notif-badge-mobile"></span></button>
     </div>
     <div class="topbar">
       <div class="topbar-title" id="page-title">Carteira</div>
-      <div class="status-dot">ONLINE</div>
+      <div class="d-flex align-center gap-12">
+        <button class="notif-bell" onclick="abrirNotificacoes()"><i data-lucide="bell"></i><span class="notif-badge hidden" id="notif-badge-desktop"></span></button>
+        <div class="status-dot">ONLINE</div>
+      </div>
     </div>
 
     <div class="page-content">
 
       <!-- CARTEIRA -->
       <div id="page-carteira">
-        <div class="card" style="text-align:center;padding:28px 16px">
-          <div class="stat-label" style="justify-content:center">Saldo total de pontos</div>
-          <div class="points-chip" style="font-size:22px;padding:10px 22px;margin-top:6px"><span class="logo-dot"></span> <span id="wallet-total">0</span> pts</div>
+        <div class="page-tabs">
+          <button class="page-tab active" id="tab-carteira-saldo" onclick="showCarteiraTab('saldo')">Saldo</button>
+          <button class="page-tab" id="tab-carteira-id" onclick="showCarteiraTab('id')">Identificação</button>
         </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title"><i data-lucide="store"></i> Empresas participantes</div></div>
-          <div id="wallet-list">
-            <div class="empty-state">
-              <div class="empty-icon"><i data-lucide="wallet"></i></div>
-              <div class="empty-title">Sua carteira está vazia</div>
-              <div class="empty-sub">Assim que você pontuar em alguma empresa parceira, o saldo aparece aqui.</div>
+
+        <div id="carteira-tab-saldo">
+          <div class="card" style="text-align:center;padding:28px 16px">
+            <div class="stat-label" style="justify-content:center">Saldo total de pontos</div>
+            <div class="points-chip" style="font-size:22px;padding:10px 22px;margin-top:6px"><span class="logo-dot"></span> <span id="wallet-total">0</span> pts</div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title"><i data-lucide="store"></i> Empresas participantes</div></div>
+            <div id="wallet-list">
+              <div class="empty-state">
+                <div class="empty-icon"><i data-lucide="wallet"></i></div>
+                <div class="empty-title">Sua carteira está vazia</div>
+                <div class="empty-sub">Assim que você pontuar em alguma empresa parceira, o saldo aparece aqui.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="carteira-tab-id" class="hidden">
+          <div class="card" style="text-align:center">
+            <div class="card-header" style="justify-content:center;border-bottom:none">
+              <div class="card-title"><i data-lucide="qr-code"></i> Sua identificação</div>
+            </div>
+            <p class="text-secondary mb-16">Mostre este QR Code (ou seu código) no caixa para pontuar ou resgatar.</p>
+            <div id="qr-container" style="display:inline-block;padding:14px;background:#fff;border-radius:16px"></div>
+            <div class="points-chip mt-16" style="font-size:18px;letter-spacing:2px" id="unique-code-display">————————</div>
+            <div class="mt-16">
+              <button class="btn btn-ghost btn-sm" onclick="shareCode()"><i data-lucide="share-2"></i> Compartilhar</button>
             </div>
           </div>
         </div>
@@ -98,55 +117,68 @@
 
       <!-- RECOMPENSAS -->
       <div id="page-recompensas" class="hidden">
-        <div class="card">
-          <div class="card-header"><div class="card-title"><i data-lucide="gift"></i> Catálogo</div></div>
-          <div id="catalogo-list"><div class="empty-state"><div class="empty-title">Carregando...</div></div></div>
+        <div class="page-tabs">
+          <button class="page-tab active" id="tab-recompensas-catalogo" onclick="showRecompensasTab('catalogo')">Catálogo</button>
+          <button class="page-tab" id="tab-recompensas-cupons" onclick="showRecompensasTab('cupons')">Cupons</button>
+          <button class="page-tab" id="tab-recompensas-pedidos" onclick="showRecompensasTab('pedidos')">Meus Pedidos</button>
         </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title"><i data-lucide="clock"></i> Meus pedidos de resgate</div></div>
-          <div id="meus-resgates-list"><div class="empty-state"><div class="empty-sub">Você ainda não pediu nenhum resgate.</div></div></div>
-        </div>
-      </div>
 
-      <!-- IDENTIFICAÇÃO -->
-      <div id="page-id" class="hidden">
-        <div class="card" style="text-align:center">
-          <div class="card-header" style="justify-content:center;border-bottom:none">
-            <div class="card-title"><i data-lucide="qr-code"></i> Sua identificação</div>
+        <div id="recompensas-tab-catalogo">
+          <div class="card">
+            <div class="card-header"><div class="card-title"><i data-lucide="gift"></i> Catálogo</div></div>
+            <div id="catalogo-list"><div class="empty-state"><div class="empty-title">Carregando...</div></div></div>
           </div>
-          <p class="text-secondary mb-16">Mostre este QR Code (ou seu código) no caixa para pontuar ou resgatar.</p>
-          <div id="qr-container" style="display:inline-block;padding:14px;background:#fff;border-radius:16px"></div>
-          <div class="points-chip mt-16" style="font-size:18px;letter-spacing:2px" id="unique-code-display">————————</div>
-          <div class="mt-16">
-            <button class="btn btn-ghost btn-sm" onclick="shareCode()"><i data-lucide="share-2"></i> Compartilhar</button>
+        </div>
+
+        <div id="recompensas-tab-cupons" class="hidden">
+          <div class="card">
+            <div class="card-header"><div class="card-title"><i data-lucide="ticket"></i> Meus Cupons</div></div>
+            <p class="text-secondary text-sm mb-12">Gerados quando você resgata uma recompensa do tipo desconto. Mostre o código na loja.</p>
+            <div id="cupons-list"><div class="empty-state"><div class="empty-sub">Nenhum cupom ainda.</div></div></div>
+          </div>
+        </div>
+
+        <div id="recompensas-tab-pedidos" class="hidden">
+          <div class="card">
+            <div class="card-header"><div class="card-title"><i data-lucide="clock"></i> Meus pedidos de resgate</div></div>
+            <div id="meus-resgates-list"><div class="empty-state"><div class="empty-sub">Você ainda não pediu nenhum resgate.</div></div></div>
           </div>
         </div>
       </div>
 
       <!-- CONQUISTAS -->
       <div id="page-conquistas" class="hidden">
-        <div class="card" style="text-align:center">
-          <div class="stat-label" style="justify-content:center">Seu nível</div>
-          <div class="stat-value" id="gamif-nivel-nome" style="font-size:26px;margin:4px 0">—</div>
-          <div class="progress-track mt-8"><div class="progress-fill" id="gamif-xp-bar" style="width:0%"></div></div>
-          <div class="text-muted text-xs mt-8" id="gamif-xp-label">0 XP</div>
+        <div class="page-tabs">
+          <button class="page-tab active" id="tab-conquistas-progresso" onclick="showConquistasTab('progresso')">Conquistas</button>
+          <button class="page-tab" id="tab-conquistas-ranking" onclick="showConquistasTab('ranking')">Ranking</button>
         </div>
-        <div class="stats-grid">
-          <div class="stat-card orange"><div class="stat-label">Streak</div><div class="stat-value" id="gamif-streak">0</div><div class="stat-sub">dias consecutivos</div></div>
-          <div class="stat-card violet"><div class="stat-label">Conquistas</div><div class="stat-value" id="gamif-conquistas-count">0</div></div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title"><i data-lucide="sparkles"></i> Conquistas</div></div>
-          <div id="conquistas-grid" class="achievements-grid"></div>
-        </div>
-      </div>
 
-      <!-- CUPONS -->
-      <div id="page-cupons" class="hidden">
-        <div class="card">
-          <div class="card-header"><div class="card-title"><i data-lucide="ticket"></i> Meus Cupons</div></div>
-          <p class="text-secondary text-sm mb-12">Gerados quando você resgata uma recompensa do tipo desconto. Mostre o código na loja.</p>
-          <div id="cupons-list"><div class="empty-state"><div class="empty-sub">Nenhum cupom ainda.</div></div></div>
+        <div id="conquistas-tab-progresso">
+          <div class="card" style="text-align:center">
+            <div class="stat-label" style="justify-content:center">Seu nível</div>
+            <div class="stat-value" id="gamif-nivel-nome" style="font-size:26px;margin:4px 0">—</div>
+            <div class="progress-track mt-8"><div class="progress-fill" id="gamif-xp-bar" style="width:0%"></div></div>
+            <div class="text-muted text-xs mt-8" id="gamif-xp-label">0 XP</div>
+          </div>
+          <div class="stats-grid">
+            <div class="stat-card orange"><div class="stat-label">Streak</div><div class="stat-value" id="gamif-streak">0</div><div class="stat-sub">dias consecutivos</div></div>
+            <div class="stat-card violet"><div class="stat-label">Conquistas</div><div class="stat-value" id="gamif-conquistas-count">0</div></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title"><i data-lucide="sparkles"></i> Conquistas</div></div>
+            <div id="conquistas-grid" class="achievements-grid"></div>
+          </div>
+        </div>
+
+        <div id="conquistas-tab-ranking" class="hidden">
+          <div class="card" id="ranking-temporada-card">
+            <div class="card-header"><div class="card-title"><i data-lucide="calendar-range"></i> <span id="ranking-temporada-nome">Temporada atual</span></div></div>
+            <div id="ranking-temporada-list"><div class="empty-state"><div class="empty-sub">Nenhuma temporada ativa no momento.</div></div></div>
+          </div>
+          <div class="card">
+            <div class="card-header"><div class="card-title"><i data-lucide="trophy"></i> Ranking global (todas as temporadas)</div></div>
+            <div id="ranking-global-list"><div class="empty-state"><div class="empty-sub">Ninguém no ranking ainda.</div></div></div>
+          </div>
         </div>
       </div>
 
@@ -163,40 +195,6 @@
         <div class="card">
           <div class="card-header"><div class="card-title"><i data-lucide="history"></i> Histórico</div></div>
           <div id="cashback-historico-list"><div class="empty-state"><div class="empty-sub">Nenhuma movimentação ainda.</div></div></div>
-        </div>
-      </div>
-
-      <!-- INDICAÇÕES -->
-      <div id="page-indicacoes" class="hidden">
-        <div class="card" style="text-align:center">
-          <div class="card-header" style="justify-content:center;border-bottom:none"><div class="card-title"><i data-lucide="share-2"></i> Indique e ganhe</div></div>
-          <p class="text-secondary mb-16">Compartilhe seu código. Quando seu indicado fizer a primeira compra pontuada, você ganha XP bônus.</p>
-          <div class="points-chip" style="font-size:18px;letter-spacing:2px" id="indicacao-code-display">————————</div>
-          <div class="mt-16"><button class="btn btn-ghost btn-sm" onclick="compartilharIndicacao()"><i data-lucide="share-2"></i> Compartilhar</button></div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title"><i data-lucide="users"></i> Quem você já indicou</div></div>
-          <div id="indicacoes-list"><div class="empty-state"><div class="empty-sub">Você ainda não indicou ninguém.</div></div></div>
-        </div>
-      </div>
-
-      <!-- NOTIFICAÇÕES -->
-      <div id="page-notificacoes" class="hidden">
-        <div class="card">
-          <div class="card-header"><div class="card-title"><i data-lucide="bell"></i> Notificações</div></div>
-          <div id="notificacoes-list"><div class="empty-state"><div class="empty-sub">Nenhuma notificação ainda.</div></div></div>
-        </div>
-      </div>
-
-      <!-- RANKING -->
-      <div id="page-ranking" class="hidden">
-        <div class="card" id="ranking-temporada-card">
-          <div class="card-header"><div class="card-title"><i data-lucide="calendar-range"></i> <span id="ranking-temporada-nome">Temporada atual</span></div></div>
-          <div id="ranking-temporada-list"><div class="empty-state"><div class="empty-sub">Nenhuma temporada ativa no momento.</div></div></div>
-        </div>
-        <div class="card">
-          <div class="card-header"><div class="card-title"><i data-lucide="trophy"></i> Ranking global (todas as temporadas)</div></div>
-          <div id="ranking-global-list"><div class="empty-state"><div class="empty-sub">Ninguém no ranking ainda.</div></div></div>
         </div>
       </div>
 
@@ -233,11 +231,35 @@
           <div class="form-group"><label class="form-label">E-mail</label><input type="email" id="perfil-email" class="form-control" disabled></div>
           <button class="btn btn-primary" onclick="saveProfile()">Salvar Perfil</button>
         </div>
+
+        <div class="card" style="text-align:center">
+          <div class="card-header" style="justify-content:center;border-bottom:none"><div class="card-title"><i data-lucide="share-2"></i> Indique e ganhe</div></div>
+          <p class="text-secondary mb-16">Compartilhe seu código. Quando seu indicado fizer a primeira compra pontuada, você ganha XP bônus.</p>
+          <div class="points-chip" style="font-size:18px;letter-spacing:2px" id="indicacao-code-display">————————</div>
+          <div class="mt-16"><button class="btn btn-ghost btn-sm" onclick="compartilharIndicacao()"><i data-lucide="share-2"></i> Compartilhar</button></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title"><i data-lucide="users"></i> Quem você já indicou</div></div>
+          <div id="indicacoes-list"><div class="empty-state"><div class="empty-sub">Você ainda não indicou ninguém.</div></div></div>
+        </div>
       </div>
 
     </div>
   </div>
 </div>
+</div>
+
+<!-- MODAL — Notificações -->
+<div class="modal-overlay" id="modal-notificacoes">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title"><i data-lucide="bell"></i> Notificações</div>
+      <button class="modal-close" onclick="closeModal('modal-notificacoes')"><i data-lucide="x"></i></button>
+    </div>
+    <div class="modal-body">
+      <div id="notificacoes-list"><div class="empty-state"><div class="empty-sub">Nenhuma notificação ainda.</div></div></div>
+    </div>
+  </div>
 </div>
 
 <!-- MODAL — Ver chaveamento (somente leitura) -->
@@ -286,6 +308,7 @@ auth.onAuthStateChanged(async user => {
     document.getElementById('app').style.display = 'block';
     renderIcons();
     loadWallet();
+    refreshNotifBadge();
   } catch (e) {
     window.location.replace('../index.html');
   }
@@ -315,23 +338,58 @@ function showToast(msg, type = 'info') {
 function openModal(id) { document.getElementById(id).classList.add('open'); renderIcons(); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-const PAGE_TITLES = { carteira: 'Carteira', recompensas: 'Recompensas', cupons: 'Cupons', cashback: 'Cashback', conquistas: 'Conquistas', indicacoes: 'Indicações', notificacoes: 'Notificações', ranking: 'Ranking', campeonatos: 'Campeonatos', id: 'Identificação', perfil: 'Meu Perfil' };
+const PAGE_TITLES = { carteira: 'Carteira', recompensas: 'Recompensas', cashback: 'Cashback', conquistas: 'Conquistas', campeonatos: 'Campeonatos', perfil: 'Meu Perfil' };
 
 function showPage(id) {
-  ['carteira', 'recompensas', 'cupons', 'cashback', 'conquistas', 'indicacoes', 'notificacoes', 'ranking', 'campeonatos', 'id', 'soon', 'perfil'].forEach(p => document.getElementById('page-' + p).classList.toggle('hidden', p !== id));
+  ['carteira', 'recompensas', 'cashback', 'conquistas', 'campeonatos', 'soon', 'perfil'].forEach(p => document.getElementById('page-' + p).classList.toggle('hidden', p !== id));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   const navEl = document.getElementById('nav-' + id);
   if (navEl) navEl.classList.add('active');
   document.getElementById('page-title').textContent = PAGE_TITLES[id] || id;
-  if (id === 'perfil') fillProfileForm();
+  if (id === 'perfil') { fillProfileForm(); loadIndicacoes(); }
   if (id === 'recompensas') loadCatalogo();
   if (id === 'conquistas') loadConquistasUsuario();
-  if (id === 'cupons') loadCupons();
   if (id === 'cashback') loadCashback();
-  if (id === 'indicacoes') loadIndicacoes();
-  if (id === 'notificacoes') loadNotificacoes();
-  if (id === 'ranking') loadRanking();
   if (id === 'campeonatos') loadCampeonatosUsuario();
+}
+
+function showCarteiraTab(tab) {
+  ['saldo', 'id'].forEach(t => {
+    document.getElementById('carteira-tab-' + t).classList.toggle('hidden', t !== tab);
+    document.getElementById('tab-carteira-' + t).classList.toggle('active', t === tab);
+  });
+}
+
+function showRecompensasTab(tab) {
+  ['catalogo', 'cupons', 'pedidos'].forEach(t => {
+    document.getElementById('recompensas-tab-' + t).classList.toggle('hidden', t !== tab);
+    document.getElementById('tab-recompensas-' + t).classList.toggle('active', t === tab);
+  });
+  if (tab === 'cupons') loadCupons();
+}
+
+function showConquistasTab(tab) {
+  ['progresso', 'ranking'].forEach(t => {
+    document.getElementById('conquistas-tab-' + t).classList.toggle('hidden', t !== tab);
+    document.getElementById('tab-conquistas-' + t).classList.toggle('active', t === tab);
+  });
+  if (tab === 'ranking') loadRanking();
+}
+
+async function abrirNotificacoes() {
+  openModal('modal-notificacoes');
+  await loadNotificacoes();
+  refreshNotifBadge();
+}
+
+async function refreshNotifBadge() {
+  try {
+    const snap = await db.ref('notificacoes/' + currentUser.uid).once('value');
+    let hasUnread = false;
+    snap.forEach(c => { if (!c.val().lida) hasUnread = true; });
+    document.getElementById('notif-badge-desktop').classList.toggle('hidden', !hasUnread);
+    document.getElementById('notif-badge-mobile').classList.toggle('hidden', !hasUnread);
+  } catch (e) { /* silencioso — badge não é crítico */ }
 }
 
 function showSoon(label, icon) {

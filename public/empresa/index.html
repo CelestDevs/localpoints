@@ -274,14 +274,31 @@
 
           <div class="form-group">
             <label class="form-label">Logo</label>
-            <div class="d-flex gap-12 align-center">
-              <img id="cfg-logo-preview" src="" alt="" style="width:56px;height:56px;border-radius:12px;object-fit:cover;background:var(--bg-3);display:none">
-              <input type="file" id="cfg-logo-file" accept="image/*" class="form-control">
+            <div class="upload-box" id="cfg-logo-box" onclick="document.getElementById('cfg-logo-file').click()">
+              <img class="upload-preview" id="cfg-logo-preview" src="" alt="">
+              <div class="upload-placeholder" id="cfg-logo-placeholder"><i data-lucide="image-plus"></i></div>
+              <div class="upload-info">
+                <div class="upload-label">Toque para enviar</div>
+                <div class="upload-hint">PNG ou JPG, até 5MB — aparece no catálogo pros clientes</div>
+                <div class="upload-filename" id="cfg-logo-filename"></div>
+              </div>
+              <button type="button" class="upload-remove hidden" id="cfg-logo-remove" onclick="event.stopPropagation(); clearImageUpload('cfg-logo')"><i data-lucide="x"></i></button>
             </div>
+            <input type="file" class="upload-input" id="cfg-logo-file" accept="image/*" onchange="handleImagePreview('cfg-logo')">
           </div>
           <div class="form-group">
             <label class="form-label">Banner</label>
-            <input type="file" id="cfg-banner-file" accept="image/*" class="form-control">
+            <div class="upload-box" id="cfg-banner-box" onclick="document.getElementById('cfg-banner-file').click()">
+              <img class="upload-preview" id="cfg-banner-preview" src="" alt="">
+              <div class="upload-placeholder" id="cfg-banner-placeholder"><i data-lucide="image-plus"></i></div>
+              <div class="upload-info">
+                <div class="upload-label">Toque para enviar</div>
+                <div class="upload-hint">PNG ou JPG, até 5MB — imagem de capa do seu perfil</div>
+                <div class="upload-filename" id="cfg-banner-filename"></div>
+              </div>
+              <button type="button" class="upload-remove hidden" id="cfg-banner-remove" onclick="event.stopPropagation(); clearImageUpload('cfg-banner')"><i data-lucide="x"></i></button>
+            </div>
+            <input type="file" class="upload-input" id="cfg-banner-file" accept="image/*" onchange="handleImagePreview('cfg-banner')">
           </div>
 
           <div class="form-group"><label class="form-label">Descrição</label><input type="text" id="cfg-description" class="form-control"></div>
@@ -390,10 +407,17 @@
       <input type="hidden" id="rec-id">
       <div class="form-group">
         <label class="form-label">Imagem</label>
-        <div class="d-flex gap-12 align-center">
-          <img id="rec-imagem-preview" src="" alt="" style="width:56px;height:56px;border-radius:12px;object-fit:cover;background:var(--bg-3);display:none">
-          <input type="file" id="rec-imagem-file" accept="image/*" class="form-control">
+        <div class="upload-box" id="rec-imagem-box" onclick="document.getElementById('rec-imagem-file').click()">
+          <img class="upload-preview" id="rec-imagem-preview" src="" alt="">
+          <div class="upload-placeholder" id="rec-imagem-placeholder"><i data-lucide="image-plus"></i></div>
+          <div class="upload-info">
+            <div class="upload-label">Toque para enviar</div>
+            <div class="upload-hint">PNG ou JPG, até 5MB</div>
+            <div class="upload-filename" id="rec-imagem-filename"></div>
+          </div>
+          <button type="button" class="upload-remove hidden" id="rec-imagem-remove" onclick="event.stopPropagation(); clearImageUpload('rec-imagem')"><i data-lucide="x"></i></button>
         </div>
+        <input type="file" class="upload-input" id="rec-imagem-file" accept="image/*" onchange="handleImagePreview('rec-imagem')">
       </div>
       <div class="form-group"><label class="form-label">Nome</label><input type="text" id="rec-nome" class="form-control"></div>
       <div class="form-group"><label class="form-label">Descrição</label><input type="text" id="rec-descricao" class="form-control"></div>
@@ -650,9 +674,8 @@ function fillConfigForm() {
   document.getElementById('cfg-cashback-enabled').checked = !!cb.enabled;
   document.getElementById('cfg-cashback-percent').value = cb.percent ?? 0;
 
-  const preview = document.getElementById('cfg-logo-preview');
-  if (e.logoUrl) { preview.src = e.logoUrl; preview.style.display = 'block'; }
-  else { preview.style.display = 'none'; }
+  setImageUploadPreview('cfg-logo', e.logoUrl);
+  setImageUploadPreview('cfg-banner', e.bannerUrl);
 }
 
 async function saveEmpresaProfile() {
@@ -1039,7 +1062,7 @@ function openNewRecompensaModal() {
   document.getElementById('rec-pontos').value = '';
   document.getElementById('rec-quantidade').value = '';
   document.getElementById('rec-status').value = 'ativo';
-  document.getElementById('rec-imagem-preview').style.display = 'none';
+  setImageUploadPreview('rec-imagem', null);
   document.getElementById('recompensa-modal-error').classList.add('hidden');
   openModal('modal-recompensa');
 }
@@ -1055,8 +1078,7 @@ function openEditRecompensa(id) {
   document.getElementById('rec-pontos').value = r.valorPontos ?? '';
   document.getElementById('rec-quantidade').value = r.quantidadeDisponivel ?? '';
   document.getElementById('rec-status').value = r.status || 'ativo';
-  const preview = document.getElementById('rec-imagem-preview');
-  if (r.imagemUrl) { preview.src = r.imagemUrl; preview.style.display = 'block'; } else { preview.style.display = 'none'; }
+  setImageUploadPreview('rec-imagem', r.imagemUrl);
   document.getElementById('recompensa-modal-error').classList.add('hidden');
   openModal('modal-recompensa');
 }
