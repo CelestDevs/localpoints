@@ -9,10 +9,19 @@
 
 let cachedToken = null; // { token, expiresAt } — reaproveitado entre requisições no mesmo isolate
 
+/**
+ * Aceita a chave privada tanto com quebras de linha de verdade quanto com
+ * "\n" literal (2 caracteres: barra + n) — é assim que ela aparece quando
+ * alguém copia o valor de dentro do arquivo JSON da service account direto
+ * (JSON representa quebra de linha em string como \n literal, não uma quebra
+ * de linha real). Sem isso, sobra esse literal misturado no meio do base64 e
+ * o atob() quebra com "invalid base64-encoded data".
+ */
 function pemToArrayBuffer(pem) {
   const b64 = pem
     .replace(/-----BEGIN PRIVATE KEY-----/, '')
     .replace(/-----END PRIVATE KEY-----/, '')
+    .replace(/\\n/g, '')
     .replace(/\s+/g, '');
   const bin = atob(b64);
   const bytes = new Uint8Array(bin.length);
