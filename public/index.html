@@ -88,7 +88,8 @@
 <div class="toast-container" id="toast-container"></div>
 
 <script>
-  let redirecting = false; // evita loop
+  let redirecting = false;   // evita loop de redirecionamento normal
+  let registrando  = false;  // suspende o listener global enquanto um cadastro está em andamento
 
   function switchTab(which) {
     document.getElementById('form-login').classList.toggle('hidden', which !== 'login');
@@ -125,7 +126,7 @@
   }, 3000);
 
   auth.onAuthStateChanged(async user => {
-    if (redirecting) return;
+    if (redirecting || registrando) return;
     clearTimeout(authTimeout);
 
     if (!user) {
@@ -182,6 +183,7 @@
     if (!email || !password) { showErr('Preencha e-mail e senha.'); return; }
 
     btn.disabled = true; btn.textContent = 'Verificando...';
+    registrando = true;
     try {
       const cred = await auth.signInWithEmailAndPassword(email, password);
       const uid  = cred.user.uid;
@@ -190,12 +192,14 @@
 
       if (!ud) {
         await auth.signOut();
+        registrando = false;
         showErr('Usuário sem cadastro no sistema. Contate o administrador.');
         btn.disabled = false; btn.textContent = 'ENTRAR';
         return;
       }
       if (ud.status === 'bloqueado' || ud.status === 'suspenso') {
         await auth.signOut();
+        registrando = false;
         showErr('Esta conta está bloqueada. Contate o administrador.');
         btn.disabled = false; btn.textContent = 'ENTRAR';
         return;
@@ -206,6 +210,8 @@
       else if (ud.role === 'empresa') window.location.replace('empresa/index.html');
       else if (ud.role === 'usuario') window.location.replace('usuario/index.html');
     } catch (err) {
+      console.error('[doLogin] Falha no login:', err);
+      registrando = false;
       showErr(mapAuthError(err));
       btn.disabled = false; btn.textContent = 'ENTRAR';
     }
@@ -223,6 +229,7 @@
     if (password.length < 6) { showErr('Senha deve ter no mínimo 6 caracteres.'); return; }
 
     btn.disabled = true; btn.textContent = 'Criando conta...';
+    registrando = true;
 
     let cred = null;
     try {
@@ -247,13 +254,18 @@
       redirecting = true;
       window.location.replace('usuario/index.html');
     } catch (err) {
+      // Fica no console mesmo que a tela mude de alguma forma — abra o
+      // DevTools (F12) → Console pra ver o erro completo, com code/message.
+      console.error('[doRegister] Falha no cadastro:', err);
+
       // Se a conta no Auth já foi criada mas o perfil no banco falhou, a
       // conta ficaria "órfã" — existe no Auth, mas sem cadastro, e a pessoa
       // nunca mais conseguiria recriar (já existe) nem logar (sem perfil).
       // Desfaz a conta do Auth pra permitir tentar de novo do zero.
       if (cred && cred.user) {
-        try { await cred.user.delete(); } catch (delErr) { /* melhor esforço */ }
+        try { await cred.user.delete(); } catch (delErr) { console.error('[doRegister] Falha ao desfazer conta órfã:', delErr); }
       }
+      registrando = false;
       showErr(mapAuthError(err));
       btn.disabled = false; btn.textContent = 'CRIAR CONTA';
     }
