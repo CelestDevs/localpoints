@@ -1172,41 +1172,56 @@ async function resgatarNoBalcao(recompensaId) {
   }
 }
 
-async function loadResgates() {
+let _resgatesListenerAtivo = false;
+
+function loadResgates() {
   const pendEl = document.getElementById('resgates-pendentes-list');
   const histEl = document.getElementById('resgates-historico-list');
-  try {
-    const snap = await db.ref('resgates/' + empresaId).orderByChild('createdAt').limitToLast(150).once('value');
-    const items = [];
-    snap.forEach(c => items.push({ id: c.key, ...c.val() }));
-    items.reverse();
 
-    const pendentes = items.filter(r => r.status === 'pendente');
-    const historico  = items.filter(r => r.status !== 'pendente');
+  const renderizar = snap => {
+    try {
+      const items = [];
+      snap.forEach(c => items.push({ id: c.key, ...c.val() }));
+      items.reverse();
 
-    pendEl.innerHTML = pendentes.length ? pendentes.map(r => `
-      <div class="entity-card pendente">
-        <div>
-          <div class="entity-name">${esc(r.usuarioNome || r.usuarioId)} — ${esc(r.recompensaNome || r.recompensaId)}</div>
-          <div class="entity-sub">${formatPoints(r.pontosGastos)} · pedido em ${esc(formatDateTime(r.createdAt))}</div>
-        </div>
-        <div class="entity-actions">
-          <button class="btn btn-success btn-sm" onclick="confirmarResgatePendente('${r.id}')"><i data-lucide="check"></i> Confirmar</button>
-          <button class="btn btn-danger btn-sm" onclick="cancelarResgatePendente('${r.id}')"><i data-lucide="x"></i> Cancelar</button>
-        </div>
-      </div>`).join('') : '<div class="empty-state"><div class="empty-sub">Nenhum pedido pendente.</div></div>';
+      const pendentes = items.filter(r => r.status === 'pendente');
+      const historico  = items.filter(r => r.status !== 'pendente');
 
-    histEl.innerHTML = historico.length ? historico.slice(0, 50).map(r => `
-      <div class="entity-card ${r.status === 'entregue' ? 'ativo' : 'suspenso'}">
-        <div>
-          <div class="entity-name">${esc(r.usuarioNome || r.usuarioId)} — ${esc(r.recompensaNome || r.recompensaId)} <span class="badge ${r.status === 'entregue' ? 'badge-active' : 'badge-closed'}">${esc(r.status)}</span></div>
-          <div class="entity-sub">${formatPoints(r.pontosGastos)} · ${esc(formatDateTime(r.entregueAt || r.createdAt))}</div>
-        </div>
-      </div>`).join('') : '<div class="empty-state"><div class="empty-sub">Nenhum resgate ainda.</div></div>';
+      pendEl.innerHTML = pendentes.length ? pendentes.map(r => `
+        <div class="entity-card pendente">
+          <div>
+            <div class="entity-name">${esc(r.usuarioNome || r.usuarioId)} — ${esc(r.recompensaNome || r.recompensaId)}</div>
+            <div class="entity-sub">${formatPoints(r.pontosGastos)} · pedido em ${esc(formatDateTime(r.createdAt))}</div>
+          </div>
+          <div class="entity-actions">
+            <button class="btn btn-success btn-sm" onclick="confirmarResgatePendente('${r.id}')"><i data-lucide="check"></i> Confirmar</button>
+            <button class="btn btn-danger btn-sm" onclick="cancelarResgatePendente('${r.id}')"><i data-lucide="x"></i> Cancelar</button>
+          </div>
+        </div>`).join('') : '<div class="empty-state"><div class="empty-sub">Nenhum pedido pendente.</div></div>';
 
-    renderIcons();
-  } catch (e) {
-    pendEl.innerHTML = `<div class="empty-state"><div class="empty-sub">Erro: ${esc(e.message)}</div></div>`;
+      histEl.innerHTML = historico.length ? historico.slice(0, 50).map(r => `
+        <div class="entity-card ${r.status === 'entregue' ? 'ativo' : 'suspenso'}">
+          <div>
+            <div class="entity-name">${esc(r.usuarioNome || r.usuarioId)} — ${esc(r.recompensaNome || r.recompensaId)} <span class="badge ${r.status === 'entregue' ? 'badge-active' : 'badge-closed'}">${esc(r.status)}</span></div>
+            <div class="entity-sub">${formatPoints(r.pontosGastos)} · ${esc(formatDateTime(r.entregueAt || r.createdAt))}</div>
+          </div>
+        </div>`).join('') : '<div class="empty-state"><div class="empty-sub">Nenhum resgate ainda.</div></div>';
+
+      renderIcons();
+    } catch (e) {
+      pendEl.innerHTML = `<div class="empty-state"><div class="empty-sub">Erro: ${esc(e.message)}</div></div>`;
+    }
+  };
+
+  // .on('value') em vez de .once('value') — a lista atualiza sozinha assim
+  // que um cliente pede um resgate, sem precisar sair e voltar na aba.
+  // Só liga o listener uma vez (evita empilhar vários se a aba for
+  // revisitada várias vezes na mesma sessão).
+  if (!_resgatesListenerAtivo) {
+    _resgatesListenerAtivo = true;
+    db.ref('resgates/' + empresaId).orderByChild('createdAt').limitToLast(150).on('value', renderizar, err => {
+      pendEl.innerHTML = `<div class="empty-state"><div class="empty-sub">Erro: ${esc(err.message)}</div></div>`;
+    });
   }
 }
 

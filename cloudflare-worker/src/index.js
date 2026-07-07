@@ -21,6 +21,7 @@ import { handleSolicitarResgate } from './handlers/solicitarResgate.js';
 import { handleCancelarResgate } from './handlers/cancelarResgate.js';
 import { handleUsarCashback } from './handlers/usarCashback.js';
 import { handleCampeonatoInscrever } from './handlers/campeonatoInscrever.js';
+import { handleVerificarConquistas } from './handlers/verificarConquistas.js';
 
 const ROUTES = {
   '/api/lancar-pontos': handleLancarPontos,
@@ -29,7 +30,8 @@ const ROUTES = {
   '/api/solicitar-resgate': handleSolicitarResgate,
   '/api/cancelar-resgate': handleCancelarResgate,
   '/api/usar-cashback': handleUsarCashback,
-  '/api/campeonato/inscrever': handleCampeonatoInscrever
+  '/api/campeonato/inscrever': handleCampeonatoInscrever,
+  '/api/verificar-conquistas': handleVerificarConquistas
 };
 
 const REQUIRED_ENV_VARS = [

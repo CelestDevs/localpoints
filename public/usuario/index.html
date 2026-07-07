@@ -290,6 +290,39 @@
   </div>
 </div>
 
+<!-- MODAL — Conquista desbloqueada (celebração) -->
+<div class="modal-overlay" id="modal-conquista-desbloqueada">
+  <div class="modal" style="text-align:center;overflow:visible">
+    <div class="modal-body" style="padding-top:36px;position:relative">
+      <div class="conquista-celebracao-burst" id="conquista-desbloqueada-burst">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <div class="achievement-icon conquista-celebracao-icon" id="conquista-desbloqueada-icon"><i data-lucide="star"></i></div>
+      <div class="conquista-celebracao-titulo mt-16">Conquista desbloqueada!</div>
+      <div class="modal-title" id="conquista-desbloqueada-nome" style="justify-content:center;margin-top:6px;font-size:19px">—</div>
+      <p class="text-secondary mt-8" id="conquista-desbloqueada-descricao" style="line-height:1.6"></p>
+    </div>
+    <div class="modal-footer" style="justify-content:center">
+      <button class="btn btn-primary" onclick="fecharCelebracaoConquista()" id="btn-celebracao-continuar">Continuar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL — Detalhes da conquista -->
+<div class="modal-overlay" id="modal-conquista-detalhe">
+  <div class="modal" style="text-align:center">
+    <div class="modal-body" style="padding-top:28px">
+      <div class="achievement-icon" id="conquista-detalhe-icon" style="width:64px;height:64px;margin:0 auto"><i data-lucide="star"></i></div>
+      <div class="modal-title" id="conquista-detalhe-nome" style="justify-content:center;margin-top:14px">—</div>
+      <p class="text-secondary mt-8" id="conquista-detalhe-descricao" style="line-height:1.6"></p>
+      <div class="badge badge-closed mt-8 hidden" id="conquista-detalhe-bloqueada-tag">Ainda não desbloqueada</div>
+    </div>
+    <div class="modal-footer" style="justify-content:center">
+      <button class="btn btn-primary" onclick="closeModal('modal-conquista-detalhe')">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL — Confirmar ação (genérico) -->
 <div class="modal-overlay" id="modal-confirmar">
   <div class="modal">
@@ -718,11 +751,93 @@ async function loadMeusResgates() {
 // ══════════════════════════════════════════════════════
 // CONQUISTAS — nível, XP, streak e grid de conquistas
 // ══════════════════════════════════════════════════════
+const CONQUISTA_CATEGORIA_CLASS = {
+  nivel_minimo: 'cat-nivel',
+  total_pontos_minimo: 'cat-pontos',
+  total_resgates_minimo: 'cat-resgates',
+  streak_minimo: 'cat-streak'
+};
+let conquistasCacheUsuario = {};
+let conquistasDesbloqueadasUsuario = {};
+
+function verDetalheConquista(id) {
+  const c = conquistasCacheUsuario[id];
+  if (!c) return;
+  const isUnlocked = !!conquistasDesbloqueadasUsuario[id];
+  const escondida = c.secreta && !isUnlocked;
+
+  document.getElementById('conquista-detalhe-icon').innerHTML = `<i data-lucide="${escondida ? 'help-circle' : esc(c.icone || 'star')}"></i>`;
+  document.getElementById('conquista-detalhe-nome').textContent = escondida ? 'Conquista secreta' : c.nome;
+  document.getElementById('conquista-detalhe-descricao').textContent = escondida
+    ? 'Continue usando o app para descobrir como desbloquear essa conquista.'
+    : (c.descricao || 'Sem descrição.');
+  document.getElementById('conquista-detalhe-bloqueada-tag').classList.toggle('hidden', isUnlocked);
+
+  const iconBox = document.getElementById('conquista-detalhe-icon');
+  const catClass = CONQUISTA_CATEGORIA_CLASS[c.criterio?.tipo] || '';
+  iconBox.className = 'achievement-icon ' + (escondida ? 'secreta-bloqueada' : catClass);
+  iconBox.style.cssText = 'width:64px;height:64px;margin:0 auto';
+
+  openModal('modal-conquista-detalhe');
+}
+
+let _filaConquistasDesbloqueadas = [];
+
+function mostrarConquistasDesbloqueadas(lista) {
+  if (!lista || !lista.length) return;
+  _filaConquistasDesbloqueadas = [...lista];
+  exibirProximaConquistaDaFila();
+}
+
+function exibirProximaConquistaDaFila() {
+  const c = _filaConquistasDesbloqueadas.shift();
+  if (!c) return;
+
+  const catClass = CONQUISTA_CATEGORIA_CLASS[c.criterio?.tipo] || '';
+  const iconBox = document.getElementById('conquista-desbloqueada-icon');
+  iconBox.className = 'achievement-icon conquista-celebracao-icon ' + catClass;
+  iconBox.innerHTML = `<i data-lucide="${esc(c.icone || 'star')}"></i>`;
+  document.getElementById('conquista-desbloqueada-nome').textContent = c.nome;
+  document.getElementById('conquista-desbloqueada-descricao').textContent = c.descricao || '';
+  document.getElementById('btn-celebracao-continuar').textContent = _filaConquistasDesbloqueadas.length ? 'Próxima' : 'Continuar';
+
+  // reinicia as animações (trocar a classe não reinicia sozinho — precisa
+  // forçar um reflow no meio, senão a segunda conquista da fila abre "parada")
+  iconBox.style.animation = 'none';
+  document.getElementById('conquista-desbloqueada-burst').style.animation = 'none';
+  void iconBox.offsetWidth;
+  iconBox.style.animation = '';
+  document.getElementById('conquista-desbloqueada-burst').querySelectorAll('span').forEach(s => {
+    s.style.animation = 'none';
+    void s.offsetWidth;
+    s.style.animation = '';
+  });
+
+  openModal('modal-conquista-desbloqueada');
+  renderIcons();
+}
+
+function fecharCelebracaoConquista() {
+  if (_filaConquistasDesbloqueadas.length) {
+    exibirProximaConquistaDaFila();
+  } else {
+    closeModal('modal-conquista-desbloqueada');
+  }
+}
+
 async function loadConquistasUsuario() {
   try {
-    // A checagem/desbloqueio de conquistas agora é feita pela Worker,
-    // automaticamente, a cada lançamento de pontos ou resgate confirmado.
-    // Aqui só exibimos o estado atual — não checamos nada de novo.
+    // Chama a Worker pra reconferir as próprias conquistas contra os
+    // contadores já salvos — sem isso, uma conquista criada depois (ou um
+    // requisito já cumprido antes dela existir) nunca desbloquearia sozinha,
+    // só na próxima vez que o usuário ganhasse pontos. Best-effort: se essa
+    // chamada falhar (ex: sem internet), a tela ainda mostra o estado atual.
+    let novasConquistas = [];
+    try {
+      const resultado = await callApi('/api/verificar-conquistas', {});
+      novasConquistas = resultado.novasConquistas || [];
+    } catch (e) { console.warn('[conquistas] falha ao reconferir:', e.message); }
+
     const userSnap = await db.ref('users/' + currentUser.uid).once('value');
     const user = userSnap.val() || {};
     currentUser = { ...currentUser, ...user };
@@ -762,6 +877,10 @@ async function loadConquistasUsuario() {
     const ids = Object.keys(conquistas);
     document.getElementById('gamif-conquistas-count').textContent = `${Object.keys(unlocked).length}/${ids.length}`;
 
+    // guardados pra abrir o modal de detalhe sem precisar buscar de novo
+    conquistasCacheUsuario = conquistas;
+    conquistasDesbloqueadasUsuario = unlocked;
+
     const gridEl = document.getElementById('conquistas-grid');
     if (!ids.length) {
       gridEl.innerHTML = '<div class="empty-state"><div class="empty-sub">Nenhuma conquista disponível ainda.</div></div>';
@@ -769,14 +888,21 @@ async function loadConquistasUsuario() {
       gridEl.innerHTML = ids.map(id => {
         const c = conquistas[id];
         const isUnlocked = !!unlocked[id];
+        const escondida = c.secreta && !isUnlocked;
+        const catClass = CONQUISTA_CATEGORIA_CLASS[c.criterio?.tipo] || '';
+        const classes = ['achievement', catClass, isUnlocked ? '' : 'locked', escondida ? 'secreta-bloqueada' : ''].filter(Boolean).join(' ');
         return `
-          <div class="achievement ${isUnlocked ? '' : 'locked'}">
-            <div class="achievement-icon"><i data-lucide="${esc(c.icone || 'star')}"></i></div>
-            <div class="achievement-name">${esc(c.nome)}</div>
+          <div class="${classes}" onclick="verDetalheConquista('${id}')">
+            <div class="achievement-icon"><i data-lucide="${escondida ? 'help-circle' : esc(c.icone || 'star')}"></i></div>
+            <div class="achievement-name">${escondida ? '???' : esc(c.nome)}</div>
           </div>`;
       }).join('');
     }
     renderIcons();
+
+    // Mostra a celebração DEPOIS do grid já atualizado — assim quem fechar o
+    // modal já vê a conquista destravada no fundo, sem precisar recarregar.
+    if (novasConquistas.length) mostrarConquistasDesbloqueadas(novasConquistas);
   } catch (e) {
     console.warn('[conquistas] erro:', e.message);
   }

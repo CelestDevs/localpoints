@@ -311,13 +311,49 @@ tbody td{padding:10px 13px;color:var(--text-primary);font-size:13px}
 .progress-track{width:100%;height:10px;background:var(--bg-3);border-radius:999px;overflow:hidden}
 .progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--violet));border-radius:999px;transition:width .4s ease}
 
+/* ══ CELEBRAÇÃO DE CONQUISTA DESBLOQUEADA ══ */
+@keyframes conquista-pop {
+  0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
+  55%  { transform: scale(1.18) rotate(6deg); opacity: 1; }
+  75%  { transform: scale(.94) rotate(-3deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+@keyframes conquista-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(242,194,101,.45); }
+  50%      { box-shadow: 0 0 0 18px rgba(242,194,101,0); }
+}
+@keyframes conquista-burst {
+  0%   { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--tx)), calc(-50% + var(--ty))) scale(1); opacity: 0; }
+}
+.conquista-celebracao-icon{width:80px;height:80px;margin:0 auto;animation:conquista-pop .6s cubic-bezier(.34,1.56,.64,1), conquista-glow 1.8s ease-out .6s infinite}
+.conquista-celebracao-icon svg{width:38px;height:38px}
+.conquista-celebracao-burst{position:absolute;top:36px;left:50%;transform:translateX(-50%);width:80px;height:80px;pointer-events:none}
+.conquista-celebracao-burst span{position:absolute;top:50%;left:50%;width:6px;height:6px;border-radius:50%;opacity:0;animation:conquista-burst .8s ease-out forwards}
+.conquista-celebracao-burst span:nth-child(1){animation-delay:.05s;background:var(--gold);--tx:60px;--ty:-40px}
+.conquista-celebracao-burst span:nth-child(2){animation-delay:.10s;background:var(--teal);--tx:-60px;--ty:-30px}
+.conquista-celebracao-burst span:nth-child(3){animation-delay:.02s;background:var(--violet);--tx:0px;--ty:-72px}
+.conquista-celebracao-burst span:nth-child(4){animation-delay:.15s;background:var(--gold);--tx:65px;--ty:22px}
+.conquista-celebracao-burst span:nth-child(5){animation-delay:.08s;background:var(--teal);--tx:-65px;--ty:26px}
+.conquista-celebracao-burst span:nth-child(6){animation-delay:.12s;background:var(--violet);--tx:0px;--ty:62px}
+.conquista-celebracao-titulo{font-family:var(--font-d);font-size:12px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--gold)}
+
 /* ══ ACHIEVEMENT BADGE ══ */
-.achievement{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:14px 8px;border-radius:var(--r);background:var(--bg-2);border:1px solid var(--border)}
-.achievement.locked{opacity:.35}
+.achievement{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:14px 8px;border-radius:var(--r);background:var(--bg-2);border:1px solid var(--border);cursor:pointer;transition:transform .1s;-webkit-tap-highlight-color:transparent}
+.achievement:active{transform:scale(.96)}
+.achievement.locked{opacity:.4}
+.achievement.secreta-bloqueada{opacity:.55}
 .achievement-icon{width:44px;height:44px;border-radius:999px;background:var(--violet-dim);color:var(--violet);display:flex;align-items:center;justify-content:center}
 .achievement-icon svg{width:22px;height:22px}
 .achievement-name{font-family:var(--font-d);font-size:12px;font-weight:600;color:var(--white)}
 .achievements-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px}
+
+/* cores por categoria de critério — duas formas: aninhado (grid) e direto (modal) */
+.achievement.cat-nivel .achievement-icon, .achievement-icon.cat-nivel{background:var(--violet-dim);color:var(--violet)}
+.achievement.cat-pontos .achievement-icon, .achievement-icon.cat-pontos{background:var(--gold-dim);color:var(--gold)}
+.achievement.cat-resgates .achievement-icon, .achievement-icon.cat-resgates{background:var(--teal-dim);color:var(--teal)}
+.achievement.cat-streak .achievement-icon, .achievement-icon.cat-streak{background:var(--orange-dim);color:var(--orange)}
+.achievement.secreta-bloqueada .achievement-icon, .achievement-icon.secreta-bloqueada{background:var(--bg-3);color:var(--text-muted)}
 
 /* ══ SECTION TITLE / DIVIDER ══ */
 .section-title{font-family:var(--font-b);font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:9px;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px}

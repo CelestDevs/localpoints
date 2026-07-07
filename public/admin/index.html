@@ -408,6 +408,10 @@
         </div>
         <div class="form-group"><label class="form-label">Valor</label><input type="number" min="1" id="conq-criterio-valor" class="form-control"></div>
       </div>
+      <div class="form-group">
+        <label class="form-label d-flex align-center gap-6"><input type="checkbox" id="conq-secreta" style="width:16px;height:16px"> Conquista secreta</label>
+        <div class="form-hint">O nome e o ícone ficam escondidos (aparece só "?") até o usuário desbloquear.</div>
+      </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-conquista')">Cancelar</button>
@@ -1313,7 +1317,7 @@ function renderConquistasList() {
     const c = conquistasCache[id];
     return `
       <div class="entity-card ativo">
-        <div><div class="entity-name">${esc(c.nome)}</div><div class="entity-sub">${esc(c.descricao || '')} · ${esc(CRITERIO_LABELS[c.criterio?.tipo] || '')}: ${c.criterio?.valor}</div></div>
+        <div><div class="entity-name">${esc(c.nome)} ${c.secreta ? '<span class="badge badge-violet">secreta</span>' : ''}</div><div class="entity-sub">${esc(c.descricao || '')} · ${esc(CRITERIO_LABELS[c.criterio?.tipo] || '')}: ${c.criterio?.valor}</div></div>
         <div class="entity-actions"><button class="btn btn-ghost btn-sm" onclick="openEditConquista('${id}')"><i data-lucide="pencil"></i></button></div>
       </div>`;
   }).join('');
@@ -1328,6 +1332,7 @@ function openNewConquistaModal() {
   document.getElementById('conq-icone').value = 'star';
   document.getElementById('conq-criterio-tipo').value = 'nivel_minimo';
   document.getElementById('conq-criterio-valor').value = '';
+  document.getElementById('conq-secreta').checked = false;
   document.getElementById('conquista-modal-error').classList.add('hidden');
   openModal('modal-conquista');
 }
@@ -1342,6 +1347,7 @@ function openEditConquista(id) {
   document.getElementById('conq-icone').value = c.icone || 'star';
   document.getElementById('conq-criterio-tipo').value = c.criterio?.tipo || 'nivel_minimo';
   document.getElementById('conq-criterio-valor').value = c.criterio?.valor ?? '';
+  document.getElementById('conq-secreta').checked = !!c.secreta;
   document.getElementById('conquista-modal-error').classList.add('hidden');
   openModal('modal-conquista');
 }
@@ -1360,7 +1366,8 @@ async function saveConquista() {
       nome,
       descricao: document.getElementById('conq-descricao').value.trim(),
       icone: document.getElementById('conq-icone').value.trim() || 'star',
-      criterio: { tipo: document.getElementById('conq-criterio-tipo').value, valor }
+      criterio: { tipo: document.getElementById('conq-criterio-tipo').value, valor },
+      secreta: document.getElementById('conq-secreta').checked
     };
     const finalId = id || db.ref('gamificacao/conquistas').push().key;
     await db.ref('gamificacao/conquistas/' + finalId).set(data);
