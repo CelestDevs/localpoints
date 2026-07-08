@@ -1186,6 +1186,9 @@ function loadResgates() {
 
       const pendentes = items.filter(r => r.status === 'pendente');
       const historico  = items.filter(r => r.status !== 'pendente');
+      console.log('[loadResgates] Total:', items.length, '| Pendentes encontrados:', pendentes.length,
+        '| status de cada item:', items.map(r => JSON.stringify(r.status)));
+      console.log('[loadResgates] Elemento pendEl existe?', !!pendEl, pendEl);
 
       pendEl.innerHTML = pendentes.length ? pendentes.map(r => `
         <div class="entity-card pendente">
