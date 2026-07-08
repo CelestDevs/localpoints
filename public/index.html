@@ -232,6 +232,7 @@
     registrando = true;
 
     let cred = null;
+    let etapa = 'auth';
     try {
       cred = await auth.createUserWithEmailAndPassword(email, password);
       const uid = cred.user.uid;
@@ -251,14 +252,19 @@
       // regra independentemente. set() no nó pai (/users/{uid}) exige a
       // permissão do NÓ INTEIRO também, que autocadastro nunca tem — só as
       // regras de campo individuais concedem acesso aqui.
+      etapa = 'users';
       await db.ref('users/' + uid).update(profile);
+      etapa = 'codigosUnicos';
       await db.ref('codigosUnicos/' + profile.uniqueCode).set(uid);
-      if (phone) await db.ref('telefones/' + profile.phone).set(uid);
+      if (phone) {
+        etapa = 'telefones';
+        await db.ref('telefones/' + profile.phone).set(uid);
+      }
 
       redirecting = true;
       window.location.replace('usuario/index.html');
     } catch (err) {
-      console.error('[doRegister] Falha no cadastro:', err);
+      console.error('[doRegister] Falha no cadastro na etapa "' + etapa + '":', err);
 
       // Se a conta no Auth já foi criada mas o perfil no banco falhou, a
       // conta ficaria "órfã" — existe no Auth, mas sem cadastro, e a pessoa
@@ -268,7 +274,7 @@
         try { await cred.user.delete(); } catch (delErr) { console.error('[doRegister] Falha ao desfazer conta órfã:', delErr); }
       }
       registrando = false;
-      showErr(mapAuthError(err));
+      showErr(mapAuthError(err) + ' [etapa: ' + etapa + ']');
       btn.disabled = false; btn.textContent = 'CRIAR CONTA';
     }
   }

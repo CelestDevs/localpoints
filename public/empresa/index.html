@@ -1219,7 +1219,12 @@ function loadResgates() {
   // revisitada várias vezes na mesma sessão).
   if (!_resgatesListenerAtivo) {
     _resgatesListenerAtivo = true;
-    db.ref('resgates/' + empresaId).orderByChild('createdAt').limitToLast(150).on('value', renderizar, err => {
+    console.log('[loadResgates] Escutando resgates/' + empresaId);
+    db.ref('resgates/' + empresaId).orderByChild('createdAt').limitToLast(150).on('value', snap => {
+      console.log('[loadResgates] Snapshot recebido, quantidade de itens:', snap.numChildren(), 'dados:', snap.val());
+      renderizar(snap);
+    }, err => {
+      console.error('[loadResgates] Erro na query de resgates/' + empresaId + ':', err);
       pendEl.innerHTML = `<div class="empty-state"><div class="empty-sub">Erro: ${esc(err.message)}</div></div>`;
     });
   }
